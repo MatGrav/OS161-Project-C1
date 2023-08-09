@@ -8,9 +8,22 @@ il numero di addrspace (inteso come: in quanti address space è mappata la pagin
 
 Dunque, bisogna cambiare le funzioni che allocano pagine di memoria, in quanto bisognerà far riferimento a questa struttura coremap che, a sua volta, marcherà i frame liberi o occupati
 e popolerà i suoi campi. Le funzioni da modificare: getppages e free_kpages che, in teoria, non usano più la ram_stealmem perché quest'ultima prende a prescindere memoria fisica senza 
-controllare effettivamente se lo spazio è libero o occupato (che ruolo ha quindi la ram_stealmem? -> Va sostituita, serve una nuova funzione che alloca memoria
+controllare effettivamente se lo spazio è libero o occupato (che ruolo ha quindi la ram_stealmem? -> vedi avanti)
 
-Da vedere come fare se serve memoria quando non è attiva la coremap. O impedire di allocare memoria finché la coremap non è pronta
+Prima che la coremap venga attivata, ovviamente deve essere allocata. Come possiamo gestire l'allocazione di memoria prima dunque che venga attivata la coremap?
+Si chiama la ram_stealmem che alloca memoria a partire da firstpaddr che, poiché stiamo parlando della primissima allocazione (dopo kernel ecc), prenderà la
+primissima porzione di memoria disponibile subito dopo firstpaddr = firstfree - MIPS_KSEG0. Ricordiamo che firstfree, definito in start.S, è sempre lo stesso.
+Parliamo dunque del primo valore di firstpaddr, prima di qualsiasi incremento. Dopo l'allocazione di coremap, firstpaddr va incrementato.
+
+Una volta allocata la coremap, viene attivata. Da qui in poi, bisogna utilizzare le funzioni da definire in coremap.c per una giusta allocazione (free/allocated).
+
+Nel laboratorio 2 il professore, qualora non fosse disponibile un intervallo di pagine libere per allocare una determinata porzione di memoria, allora chiamava
+ram_stealmem che, a sua volta, prendeva la memoria di cui ha bisogno a partire da firstpaddr, non tenendo conto se le pagine prese fossero libere o occupate. Nel nostro caso, non possiamo fare così. Dobbiamo, qualora non ci fosse più spazio disponibile (ergo, non ci sono sufficienti frame marcati come liberi), chiamare  un
+algoritmo di sostituzione delle pagine, secondo una politica di sostituzione da definire in seguito (second chance, ecc).
+
+
+
+
 
 
 
