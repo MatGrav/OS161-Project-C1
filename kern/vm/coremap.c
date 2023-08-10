@@ -7,6 +7,6 @@
 #include <spinlock.h>
 
 
-coremap_init(){
+void coremap_init(){
     
 }
