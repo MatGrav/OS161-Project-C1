@@ -29,7 +29,14 @@ Nel laboratorio 2 il professore, qualora non fosse disponibile un intervallo di 
 ram_stealmem che, a sua volta, prendeva la memoria di cui ha bisogno a partire da firstpaddr, non tenendo conto se le pagine prese fossero libere o occupate. Nel nostro caso, non possiamo fare così. Dobbiamo, qualora non ci fosse più spazio disponibile (ergo, non ci sono sufficienti frame marcati come liberi), chiamare  un
 algoritmo di sostituzione delle pagine, secondo una politica di sostituzione da definire in seguito (second chance, ecc).
 
+coremap.c:
+1) coremap_init inizializza le struct (la coremap static?)
+2) coremap
 
+## Nuovo gestore memoria virtuale
+
+È stato aggiunto un nuovo gestore di memoria virtuale che sostituisce dumbvm. Il suo nome, scelto accuratamente dagli inventori, è NovaVM. Il file novavm.c si trova esattamente dove si trovava dumbvm.c: kern/arch/mips/vm
+Esistono anche due "vm.h": ne creiamo uno nuovo appositamente per il nostro gestore, che si chiama novavm.h e si trova in kern/include.
 
 
 
