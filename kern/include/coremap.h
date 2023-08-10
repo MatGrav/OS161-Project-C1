@@ -15,4 +15,6 @@ struct coremap{
     unsigned long size; /* coremap size */
 };
 
+
+
 #endif

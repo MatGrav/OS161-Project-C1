@@ -4,3 +4,9 @@
 #include <addrspace.h>
 #include <vm.h>
 #include <proc.h>
+#include <spinlock.h>
+
+
+coremap_init(){
+    
+}
