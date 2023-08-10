@@ -6,9 +6,17 @@ La coremap è vista come una struttura dati che ha all'interno: una struct come 
 L'entry generica della coremap è composta così: l'indirizzo fisico della pagina, un vettore di puntatori (**) di struct addrspace (attenzione: forse va modificata la struttura?),
 il numero di addrspace (inteso come: in quanti address space è mappata la pagina), un intero (o bool) che indica se la pagina è occupata o libera.
 
-Dunque, bisogna cambiare le funzioni che allocano pagine di memoria, in quanto bisognerà far riferimento a questa struttura coremap che, a sua volta, marcherà i frame liberi o occupati
-e popolerà i suoi campi. Le funzioni da modificare: getppages e free_kpages che, in teoria, non usano più la ram_stealmem perché quest'ultima prende a prescindere memoria fisica senza 
-controllare effettivamente se lo spazio è libero o occupato (che ruolo ha quindi la ram_stealmem? -> vedi avanti)
+Dunque, bisogna cambiare le funzioni che allocano pagine di memoria, in quanto bisognerà far riferimento a questa struttura coremap che, a sua volta, marcherà i frame liberi o occupati e popolerà i suoi campi. Le funzioni da modificare: getppages e free_kpages che, in teoria, non usano più la ram_stealmem perché quest'ultima prende a prescindere memoria fisica senza controllare effettivamente se lo spazio è libero o occupato (che ruolo ha quindi la ram_stealmem? -> vedi avanti)
+
+Quando allochiamo memoria kernel in OS161, senza la tabella delle pagine, le funzioni che vengono chiamate sono in ordine:
+alloc_kpages -> getppages -> ram_stealmem
+
+A livello user:
+as_prepare_load -> getppages -> ram_stealmem
+
+Dopo il laboratorio 2, sono state implementate delle soluzioni per liberare delle pagine.
+A livello kernel:
+kfree -> free_kpages -> freeppages -> freeRamFrames
 
 Prima che la coremap venga attivata, ovviamente deve essere allocata. Come possiamo gestire l'allocazione di memoria prima dunque che venga attivata la coremap?
 Si chiama la ram_stealmem che alloca memoria a partire da firstpaddr che, poiché stiamo parlando della primissima allocazione (dopo kernel ecc), prenderà la
