@@ -7,6 +7,8 @@
 #define OCCUPIED 1
 #define RESERVED 2 /*Protection for pages used by the kernel, i.e: frames where coremap is allocated */
 
+#define MAX_NUM_ASS_ADDR 16
+
 struct coremap_entry{
     struct addrspace** associated_addr; /* array of pointers to the address spaces associated to the page */
     unsigned long num_assaddr; /* number of address spaces */
@@ -18,8 +20,11 @@ struct coremap{
     struct coremap_entry* entry; /* entry of the coremap */
     unsigned long size; /* coremap size */
 
-    paddr_t* null_pages; /* List of free pages */
-    unsigned long null_pages_sz; /*Size of the list of free pages*/
+    struct coremap_entry** np; /* Array of free pages */
+    unsigned long np_capacity;
+    unsigned long np_tail;
+    unsigned long np_head; /* Head of null pages */
+    unsigned long np_sz; /*Size of the list of free pages*/
 };
 
 void coremap_init();
@@ -30,7 +35,7 @@ static int isCoremapActive();
 
 //static paddr_t getoneppage(struct addrspace* ?); ?
 //static paddr_t* getfreeppages(unsigned long); ?
-static paddr_t getfreeppages(unsigned long);
+int getfreeppages(unsigned long, paddr_t addr[]);
 
 static paddr_t getppages(unsigned long);
 
@@ -39,5 +44,8 @@ static int freeppages(paddr_t, unsigned long);
 vaddr_t alloc_kpages(unsigned long);
 
 void free_kpages(vaddr_t);
+
+
+void rem_head();
 
 #endif
