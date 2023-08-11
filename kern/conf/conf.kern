@@ -343,6 +343,14 @@ file      proc/proc.c
 #
 
 file      vm/kmalloc.c
+#file      vm/coremap.c
+
+defoption novavm
+
+optfile novavm vm/novavm.c
+optfile novavm vm/coremap.c
+#optfile novavm arch/mips/vm/novavm.c
+#optofffile novavm arch/mips/vm/dumbvm.c
 
 optofffile dumbvm   vm/addrspace.c
 

@@ -41,11 +41,11 @@ static paddr_t getppages(unsigned long);
 
 static int freeppages(paddr_t, unsigned long);
 
-vaddr_t alloc_kpages(unsigned long);
+vaddr_t alloc_kpages(unsigned);
 
 void free_kpages(vaddr_t);
 
 
 void rem_head();
 
-#endif
+#endif /* _COREMAP_H_ */

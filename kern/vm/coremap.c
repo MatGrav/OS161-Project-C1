@@ -1,10 +1,45 @@
-#include <types.h>
+/* #include <types.h>
 #include <kern/errno.h>
 #include <lib.h>
+#include <spl.h>
+#include <cpu.h>
+#include <spinlock.h>
+#include <proc.h>
+#include <current.h>
 #include <addrspace.h>
 #include <vm.h>
 #include <proc.h>
+#include <spinlock.h> */
+
+/*
+#include <types.h>
 #include <spinlock.h>
+#include <lib.h>
+
+
+#include <kern/errno.h>
+
+#include <spl.h>
+#include <cpu.h>
+#include <proc.h>
+#include <current.h>
+#include <mips/tlb.h>
+#include <addrspace.h>
+#include <vm.h>
+#include <novavm.h>
+
+#include <coremap.h>
+*/
+#include <types.h>
+#include <kern/errno.h>
+#include <spinlock.h>
+#include <current.h>
+#include <cpu.h>
+#include <proc.h>
+#include <addrspace.h>
+#include <novavm.h>
+#include <coremap.h>
+
 
 
 static struct spinlock stealmem_lock = SPINLOCK_INITIALIZER;
@@ -12,6 +47,8 @@ static struct spinlock stealmem_lock = SPINLOCK_INITIALIZER;
 static struct spinlock coremap_lock = SPINLOCK_INITIALIZER;
 
 static struct coremap* cmap = NULL;
+
+static int nRamFrames = 0;
 
 static int coremapActive = 0;
 
@@ -47,31 +84,31 @@ void coremap_init(){
   
 
   for (i=0; i<nRamFrames; i++) {    
-    cmap->entry[i]->associated_addr = kmalloc(sizeof(struct addrspace*)*MAX_NUM_ASS_ADDR);
-    cmap->entry[i]->num_assaddr = 0;
-    cmap->entry[i]->frame_addr = i*PAGE_SIZE;   
+    cmap->entry[i].associated_addr = kmalloc(sizeof(struct addrspace*)*MAX_NUM_ASS_ADDR);
+    cmap->entry[i].num_assaddr = 0;
+    cmap->entry[i].frame_addr = i*PAGE_SIZE;   
   }
   /* Until now we allocated contiguously by calling the kmalloc which uses
   ram_stealmem since coremap is not active */
   for (i=0;i<nRamFrames; i++){
     if(i<firstpaddr/PAGE_SIZE){
         /* Protecting frames used by kernel until now*/
-        cmap->entry[i]->status = RESERVED;
+        cmap->entry[i].status = RESERVED;
 
     }
     else if(i == firstpaddr/PAGE_SIZE){
         /* firstpaddr may be in the middle of a frame partly used by the kernel,
         we allow internal frammentation to preserve the "kernel bytes" */
         if(firstpaddr % PAGE_SIZE != 0){
-            firstpaddr = cmap->entry[i+1]->frame_addr;
-            cmap->entry[i]->status = RESERVED;
+            firstpaddr = cmap->entry[i+1].frame_addr;
+            cmap->entry[i].status = RESERVED;
         }
         else{
-            cmap->entry[i]->status = FREE;
+            cmap->entry[i].status = FREE;
         }
 
     }else{    
-        cmap->entry[i]->status = FREE;
+        cmap->entry[i].status = FREE;
     }
   }
 
@@ -93,9 +130,10 @@ void coremap_init(){
 
 /* Should never be called?*/
 void coremap_cleanup(){
+    int i;
     for (i=0;i<nRamFrames; i++){
-        kfree(cmap->entry[i]->associated_addr)
-    }
+        kfree(cmap->entry[i].associated_addr)
+    };
     kfree(cmap->entry);
     kfree(cmap->np);
     kfree(cmap);
@@ -112,7 +150,7 @@ void rem_head(){
 
 int
 getfreeppages(unsigned long npages, paddr_t addr[]) {
-  long found = (long) 0;
+  unsigned long found = (long) 0;
 
   if (!isCoremapActive()) return 0; 
   spinlock_acquire(&coremap_lock);
@@ -151,8 +189,26 @@ static paddr_t getppages(unsigned long npages){
   return addr;
 }
 
-static int freeppages(paddr_t, unsigned long);
+static int freeppages(paddr_t e1, unsigned long e2){
+  (void) e1;
+  (void) e2;
+  panic("something");
+}
 
-vaddr_t alloc_kpages(unsigned long);
+vaddr_t
+alloc_kpages(unsigned npages)
+{
+	paddr_t pa;
 
-void free_kpages(vaddr_t);
+	novavm_can_sleep();
+	pa = getppages(npages);
+	if (pa==0) {
+		return 0;
+	}
+	return PADDR_TO_KVADDR(pa);
+}
+
+void free_kpages(vaddr_t T){
+  (void)T;
+  panic("something");
+}
