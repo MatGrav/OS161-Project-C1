@@ -38,7 +38,7 @@ coremap.c:
 È stato aggiunto un nuovo gestore di memoria virtuale che sostituisce dumbvm. Il suo nome, scelto accuratamente dagli inventori, è NovaVM. Il file novavm.c si trova esattamente dove si trovava dumbvm.c: kern/arch/mips/vm
 Esistono anche due "vm.h": ne creiamo uno nuovo appositamente per il nostro gestore, che si chiama novavm.h e si trova in kern/include.
 
-
+Abbiamo modificato la dimensione della RAM in os161/root/sys161.conf portandola da 512K a 8M, in questo modo abbiamo più spazio per allocare.
 
 
 
