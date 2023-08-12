@@ -156,7 +156,44 @@ void rem_head(){
     }
 }
 
+static paddr_t 
+getfreeppages(unsigned long npages) {
+  paddr_t addr = 0;	
+  long i, first, found, np = (long)npages;
 
+  if (!isCoremapActive()) return 0; 
+  spinlock_acquire(&coremap_lock);
+  for (i=0,first=found=-1; i<(long) (cmap->size); i++) {
+    if ( cmap->entry[i].status == FREE) {
+      if (i==0 || (cmap->entry[i].status != FREE)) 
+        first = i; /* set first free in an interval */   
+      if (i-first+1 >= np) {
+        found = first;
+        break;
+      }
+    }
+  }
+	
+  if (found>=0) {
+    for (i=found; i<found+np; i++) {
+      cmap->entry[i].status = OCCUPIED;
+
+      /* Free entries should also be removed from cmap np*/
+    }
+    //allocSize[found] = np;
+    addr = (paddr_t) cmap->entry[found].frame_addr;
+  }
+  else {
+    addr = 0;
+  }
+
+  spinlock_release(&coremap_lock);
+
+  return addr;
+}
+
+
+#if 0 
 static int
 getfreeppages(unsigned long npages, paddr_t addr[]) {
   unsigned long found = (long) 0;
@@ -172,25 +209,25 @@ getfreeppages(unsigned long npages, paddr_t addr[]) {
         rem_head();
         found++;
     } else {
-        /* SOSTITUZIONE*/
-        /* Vedere cosa succede per la page table quando sarà implementata*/
-        /* Ricordiamoci di mettere anche in questo caso lo status OCCUPIED*/
+        // SOSTITUZIONE
+        // Vedere cosa succede per la page table quando sarà implementata
+        // Ricordiamoci di mettere anche in questo caso lo status OCCUPIED
     }
   }
 
   return (int) found;
 }
+#endif
 
-
-static paddr_t* getppages(unsigned long npages, paddr_t addr[]){
-  //paddr_t addr[npages];
+static paddr_t getppages(unsigned long npages){
+  paddr_t addr;
 
   /* try freed pages first */
-  int res = getfreeppages(npages,addr);
-  if (res == 0) {
+  addr = getfreeppages(npages);
+  if (addr == 0) {
     /* call stealmem, only when coremap is not active*/
     spinlock_acquire(&stealmem_lock);
-    addr[0] = ram_stealmem(npages);
+    addr = ram_stealmem(npages);
     spinlock_release(&stealmem_lock);
   }
 
@@ -207,14 +244,14 @@ static int freeppages(paddr_t e1, unsigned long e2){
 vaddr_t
 alloc_kpages(unsigned npages)
 {
-	paddr_t pa[npages];
+	paddr_t pa;
 
 	novavm_can_sleep();
-	getppages(npages,pa);
+	pa = getppages(npages);
 	if (pa==0) {
 		return 0;
 	}
-	return PADDR_TO_KVADDR(pa[0]);
+	return PADDR_TO_KVADDR(pa);
 }
 
 void free_kpages(vaddr_t T){
