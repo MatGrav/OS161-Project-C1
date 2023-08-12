@@ -27,25 +27,27 @@ struct coremap{
     unsigned long np_sz; /*Size of the list of free pages*/
 };
 
-void coremap_init();
+void rem_head(void);
 
-void coremap_cleanup();
+void coremap_init(void);
 
-static int isCoremapActive();
+void coremap_cleanup(void);
+
+//static int isCoremapActive(void);
 
 //static paddr_t getoneppage(struct addrspace* ?); ?
 //static paddr_t* getfreeppages(unsigned long); ?
-int getfreeppages(unsigned long, paddr_t addr[]);
+//static int getfreeppages(unsigned long, paddr_t addr[]);
 
-static paddr_t getppages(unsigned long);
+//static paddr_t* getppages(unsigned long, paddr_t addr[]);
 
-static int freeppages(paddr_t, unsigned long);
+//static int freeppages(paddr_t, unsigned long);
 
 vaddr_t alloc_kpages(unsigned);
 
 void free_kpages(vaddr_t);
 
 
-void rem_head();
+
 
 #endif /* _COREMAP_H_ */

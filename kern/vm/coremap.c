@@ -36,6 +36,8 @@
 #include <current.h>
 #include <cpu.h>
 #include <proc.h>
+#include <proc.h>
+
 #include <addrspace.h>
 #include <novavm.h>
 #include <coremap.h>
@@ -48,7 +50,7 @@ static struct spinlock coremap_lock = SPINLOCK_INITIALIZER;
 
 static struct coremap* cmap = NULL;
 
-static int nRamFrames = 0;
+static unsigned int nRamFrames = 0;
 
 static int coremapActive = 0;
 
@@ -61,16 +63,22 @@ static int isCoremapActive(){
 }
 
 void coremap_init(){
-  int i;
+  unsigned int i;
   nRamFrames = ((int)ram_getsize())/PAGE_SIZE;
 
   cmap = kmalloc(sizeof(struct coremap));
-  if (cmap==NULL) return;  
+  
+  if (cmap==NULL){
+    kprintf("Non ho allocato la coremap\n");
+    return;
+  }  
 
 
   /* alloc freeRamFrame and allocSize */  
   cmap->entry = kmalloc(sizeof(struct coremap_entry)*nRamFrames);
   if (cmap->entry==NULL){
+    kprintf("Non ho allocato la cmap enttry\n");
+
     kfree(cmap);
     return;
   } 
@@ -90,6 +98,7 @@ void coremap_init(){
   }
   /* Until now we allocated contiguously by calling the kmalloc which uses
   ram_stealmem since coremap is not active */
+  paddr_t firstpaddr = ram_stealmem(0);
   for (i=0;i<nRamFrames; i++){
     if(i<firstpaddr/PAGE_SIZE){
         /* Protecting frames used by kernel until now*/
@@ -114,7 +123,7 @@ void coremap_init(){
 
   /* At this point, firstpaddr always points to the start of a null frame*/
   for (i=0;i<(nRamFrames-firstpaddr/PAGE_SIZE); i++){
-    cmap->np[i] = cmap->entry[i+firstpaddr/PAGE_SIZE];
+    cmap->np[i] = &(cmap->entry[i+firstpaddr/PAGE_SIZE]);
   }
   cmap->np_head = 0;
   cmap->np_tail = nRamFrames-firstpaddr/PAGE_SIZE-1;
@@ -130,10 +139,10 @@ void coremap_init(){
 
 /* Should never be called?*/
 void coremap_cleanup(){
-    int i;
+    unsigned int i;
     for (i=0;i<nRamFrames; i++){
-        kfree(cmap->entry[i].associated_addr)
-    };
+      kfree(cmap->entry[i].associated_addr);
+    }
     kfree(cmap->entry);
     kfree(cmap->np);
     kfree(cmap);
@@ -148,7 +157,7 @@ void rem_head(){
 }
 
 
-int
+static int
 getfreeppages(unsigned long npages, paddr_t addr[]) {
   unsigned long found = (long) 0;
 
@@ -173,15 +182,15 @@ getfreeppages(unsigned long npages, paddr_t addr[]) {
 }
 
 
-static paddr_t getppages(unsigned long npages){
-  paddr_t addr[npages];
+static paddr_t* getppages(unsigned long npages, paddr_t addr[]){
+  //paddr_t addr[npages];
 
   /* try freed pages first */
-  addr = getfreeppages(npages,addr);
-  if (addr == 0) {
+  int res = getfreeppages(npages,addr);
+  if (res == 0) {
     /* call stealmem, only when coremap is not active*/
     spinlock_acquire(&stealmem_lock);
-    addr = ram_stealmem(npages);
+    addr[0] = ram_stealmem(npages);
     spinlock_release(&stealmem_lock);
   }
 
@@ -192,23 +201,27 @@ static paddr_t getppages(unsigned long npages){
 static int freeppages(paddr_t e1, unsigned long e2){
   (void) e1;
   (void) e2;
-  panic("something");
+  panic("something freeppages");
 }
 
 vaddr_t
 alloc_kpages(unsigned npages)
 {
-	paddr_t pa;
+	paddr_t pa[npages];
 
 	novavm_can_sleep();
-	pa = getppages(npages);
+	getppages(npages,pa);
 	if (pa==0) {
 		return 0;
 	}
-	return PADDR_TO_KVADDR(pa);
+	return PADDR_TO_KVADDR(pa[0]);
 }
 
 void free_kpages(vaddr_t T){
   (void)T;
-  panic("something");
+  
+  
+  panic("Should not enter here");
+
+  freeppages(0,0);
 }

@@ -11,10 +11,11 @@
 #include <vm.h>
 
 #include <novavm.h>
+#include <coremap.h>
 
 /* Initialization function */
 void vm_bootstrap(void){
-
+	coremap_init();
 }
 
 void

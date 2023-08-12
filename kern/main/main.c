@@ -52,6 +52,8 @@
 #include "autoconf.h"  // for pseudoconfig
 
 #include "hello.h"
+//#include <novavm.h>
+//#include <coremap.h>
 
 
 /*
