@@ -235,10 +235,21 @@ static paddr_t getppages(unsigned long npages){
   return addr;
 }
 
-static int freeppages(paddr_t e1, unsigned long e2){
-  (void) e1;
-  (void) e2;
-  panic("something freeppages");
+static int freeppages(paddr_t addr, unsigned long npages){
+  long i, first, np=(long)npages;	
+
+  if (!isCoremapActive()) return 0; 
+  first = addr/PAGE_SIZE;
+  KASSERT(cmap->entry!=NULL);
+  KASSERT(cmap->size > (unsigned) first);
+
+  spinlock_acquire(&coremap_lock);
+  for (i=first; i<first+np; i++) {
+    cmap->entry[i].status = FREE;
+  }
+  spinlock_release(&coremap_lock);
+
+  return 1;
 }
 
 vaddr_t
@@ -254,11 +265,15 @@ alloc_kpages(unsigned npages)
 	return PADDR_TO_KVADDR(pa);
 }
 
-void free_kpages(vaddr_t T){
-  (void)T;
-  
-  
-  panic("Should not enter here");
-
-  freeppages(0,0);
+void free_kpages(vaddr_t addr){
+  if (isCoremapActive()) {
+    paddr_t paddr = addr - MIPS_KSEG0;
+    long first = paddr/PAGE_SIZE;	
+    KASSERT(cmap->entry!=NULL);
+    KASSERT(cmap->size > (unsigned) first);
+    
+    // TO DO: think about how to find the number of pages
+    // We don't have allocSize
+    freeppages(paddr, 1/*allocSize[first] */);	
+  }
 }
