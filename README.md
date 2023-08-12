@@ -1,5 +1,7 @@
 # os161-base-2.0.3
 
+[Link per stesura di file .md](https://chat.openai.com/share/b8d52ceb-4b52-4795-b3ed-1d0a377be42b)
+
 ## COREMAP
 La coremap è una struttura dati che ci serve a tenere traccia dei frame liberi (e occupati) in memoria. Ricordiamoci che una pagina può essere mappata in più address space.
 La coremap è vista come una struttura dati che ha all'interno: un array di struct di entry generica, la size della coremap, un vettore di pagine libere e la sua size.
@@ -30,13 +32,14 @@ ram_stealmem che, a sua volta, prendeva la memoria di cui ha bisogno a partire d
 algoritmo di sostituzione delle pagine, secondo una politica di sostituzione da definire in seguito (second chance, ecc).
 
 coremap.c:
-1) coremap_init inizializza le struct (la coremap static?)
-2) coremap
+- [x] coremap_init inizializza le struct (la coremap static?)
+- [ ] coremap
 
 ## Nuovo gestore memoria virtuale
 
-È stato aggiunto un nuovo gestore di memoria virtuale che sostituisce dumbvm. Il suo nome, scelto accuratamente dagli inventori, è NovaVM. Il file novavm.c si trova esattamente dove si trovava dumbvm.c: kern/arch/mips/vm
-Esistono anche due "vm.h": ne creiamo uno nuovo appositamente per il nostro gestore, che si chiama novavm.h e si trova in kern/include.
+È stato aggiunto un nuovo gestore di memoria virtuale che sostituisce dumbvm. Il suo nome, scelto accuratamente dagli inventori, è NovaVM. ~~Il file novavm.c si trova esattamente dove si trovava dumbvm.c: kern/arch/mips/vm~~
+Il file è attualmente posizionato in *kern/vm* insieme a tutti gli altri.
+~~Esistono anche due "vm.h": ne creiamo uno nuovo appositamente per il nostro gestore, che si chiama novavm.h e si trova in kern/include.~~
 
 Abbiamo modificato la dimensione della RAM in os161/root/sys161.conf portandola da 512K a 8M, in questo modo abbiamo più spazio per allocare.
 
@@ -48,7 +51,8 @@ Abbiamo modificato la dimensione della RAM in os161/root/sys161.conf portandola 
 
 ## Modifiche addrspace
 
-In dumbvm, sia pre che post laboratorio 2, ci sono le (ri)definizioni delle funzioni relative all'addrspace, dichiarate in kern/include/addrspace.h. Abbiamo pensato che queste vadano implementate in novavm.c . Tuttavia, l'implementazione subirà delle modifiche perché presumiamo che la struct addrspace venga modificata (in addrspace.h) per tener conto della non-contiguità dei segmenti codice, data e stack. 
+In dumbvm, sia pre che post laboratorio 2, ci sono le (ri)definizioni delle funzioni relative all'addrspace, dichiarate in kern/include/addrspace.h. Abbiamo pensato che queste vadano implementate in novavm.c.
+Tuttavia, l'implementazione subirà delle modifiche perché presumiamo che la struct addrspace venga modificata (in addrspace.h) per tener conto della non-contiguità dei segmenti codice, data e stack. 
 
 
 
