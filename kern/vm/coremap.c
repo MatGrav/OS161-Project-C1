@@ -21,6 +21,15 @@ static unsigned int nRamFrames = 0;
 
 static int coremapActive = 0;
 
+unsigned int get_nRamFrames(){
+  /*
+  unsigned int alias;
+  alias = nRamFrames;
+  return alias;
+  */
+  return nRamFrames;
+}
+
 static int isCoremapActive(){
     int active;
     spinlock_acquire(&coremap_lock);
