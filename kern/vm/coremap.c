@@ -1,41 +1,8 @@
-/* #include <types.h>
-#include <kern/errno.h>
-#include <lib.h>
-#include <spl.h>
-#include <cpu.h>
-#include <spinlock.h>
-#include <proc.h>
-#include <current.h>
-#include <addrspace.h>
-#include <vm.h>
-#include <proc.h>
-#include <spinlock.h> */
-
-/*
-#include <types.h>
-#include <spinlock.h>
-#include <lib.h>
-
-
-#include <kern/errno.h>
-
-#include <spl.h>
-#include <cpu.h>
-#include <proc.h>
-#include <current.h>
-#include <mips/tlb.h>
-#include <addrspace.h>
-#include <vm.h>
-#include <novavm.h>
-
-#include <coremap.h>
-*/
 #include <types.h>
 #include <kern/errno.h>
 #include <spinlock.h>
 #include <current.h>
 #include <cpu.h>
-#include <proc.h>
 #include <proc.h>
 
 #include <addrspace.h>
