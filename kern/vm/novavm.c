@@ -12,10 +12,12 @@
 
 #include <novavm.h>
 #include <coremap.h>
+#include <pt.h>
 
 /* Initialization function */
 void vm_bootstrap(void){
 	coremap_init();
+	pt_init();
 }
 
 void
