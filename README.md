@@ -40,19 +40,19 @@ coremap.c:
 È stato aggiunto un nuovo gestore di memoria virtuale che sostituisce dumbvm. Il suo nome, scelto accuratamente dagli inventori, è NovaVM. ~~Il file novavm.c si trova esattamente dove si trovava dumbvm.c: kern/arch/mips/vm~~
 Il file è attualmente posizionato in *kern/vm* insieme a tutti gli altri.
 ~~Esistono anche due "vm.h": ne creiamo uno nuovo appositamente per il nostro gestore, che si chiama novavm.h e si trova in kern/include.~~
-
 Abbiamo modificato la dimensione della RAM in os161/root/sys161.conf portandola da 512K a 8M, in questo modo abbiamo più spazio per allocare.
 
 
-
-
-
-
-
 ## Modifiche addrspace
-
 In dumbvm, sia pre che post laboratorio 2, ci sono le (ri)definizioni delle funzioni relative all'addrspace, dichiarate in kern/include/addrspace.h. Abbiamo pensato che queste vadano implementate in novavm.c.
 Tuttavia, l'implementazione subirà delle modifiche perché presumiamo che la struct addrspace venga modificata (in addrspace.h) per tener conto della non-contiguità dei segmenti codice, data e stack. 
+
+## PAGE TABLE
+La page table si deve occupare della traduzione da indirizzo logico a indirizzo fisico. Dunque, il kernel lavorerà allocando in maniera contigua, mentre a livello user si utilizzerà la paginazione. La pagetable è vista come una struct con all'interno un vettore di pagine fisiche e ALTRO DA DEFINIRE.
+Bisogna definire (VEDERE COME) il numero di pagine della page table. Come fare? NON è uguale a nRamFrames perché non riguarda tutta la ram, compresa la zona kernel, ma solo lo spazio user.
+La logica con cui si accede al corrispondente valore fisico di un indirizzo è il seguente:
+pt_map() -> pongo in ingresso il fisico e il virtuale, dal virtuale dividendo per PAGE_SIZE ottengo l'indice di pagina che sfrutto anche come indice del vettore in cui inserire il corrispondente valore fisico
+pt_translate()-> una volta inseriti i valori fisici, per tradurre un indirizzo virtuale basterà semplicemente ottenere l'indice (sempre dividendo per PAGE_SIZE) e accedere all'i-esima posizione del vettore all'interno della struct pagetable.
 
 
 
