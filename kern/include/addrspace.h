@@ -58,7 +58,9 @@ struct addrspace {
         size_t as_npages2;
         paddr_t as_stackpbase;
 #else
-        /* Put stuff here for your VM system */
+        struct segment code;
+        struct segment data;
+        struct segment stack;
 #endif
 };
 

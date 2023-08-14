@@ -60,6 +60,8 @@
 #include <vnode.h>
 #include <elf.h>
 
+#include <segment.h>
+
 /*
  * Load a segment at virtual address VADDR. The segment in memory
  * extends from VADDR up to (but not including) VADDR+MEMSIZE. The
@@ -76,34 +78,40 @@
  */
 static
 int
-load_segment(struct addrspace *as, struct vnode *v,
+load_segment(/*struct addrspace *as, struct vnode *v,
 	     off_t offset, vaddr_t vaddr,
 	     size_t memsize, size_t filesize,
-	     int is_executable)
+	     int is_executable*/ struct segment* s)
 {
 	struct iovec iov;
 	struct uio u;
 	int result;
 
-	if (filesize > memsize) {
+	if (s->filesize > s->memsize) {
 		kprintf("ELF: warning: segment filesize > segment memsize\n");
-		filesize = memsize;
+		s->filesize = s->memsize;
 	}
 
 	DEBUG(DB_EXEC, "ELF: Loading %lu bytes to 0x%lx\n",
-	      (unsigned long) filesize, (unsigned long) vaddr);
+	      (unsigned long) s->filesize, (unsigned long) s->vaddr);
+	
 
-	iov.iov_ubase = (userptr_t)vaddr;
-	iov.iov_len = memsize;		 // length of the memory space
+	iov.iov_ubase = s->vaddr;
+	iov.iov_len = s->memsize;		 // length of the memory space
 	u.uio_iov = &iov;
 	u.uio_iovcnt = 1;
-	u.uio_resid = filesize;          // amount to read from the file
-	u.uio_offset = offset;
-	u.uio_segflg = is_executable ? UIO_USERISPACE : UIO_USERSPACE;
-	u.uio_rw = UIO_READ;
-	u.uio_space = as;
+	u.uio_resid = s->filesize;          // amount to read from the file
+	u.uio_offset = s->offset;
+	if (s->permission==S_EX){
+		u.uio_segflg = UIO_USERISPACE
+	} else {
+		u.uio_segflg = UIO_USERSPACE;
 
-	result = VOP_READ(v, &u);
+	}
+	u.uio_rw = UIO_READ; //?
+	u.uio_space = s->as;
+
+	result = VOP_READ(s->file_elf, &u);
 	if (result) {
 		return result;
 	}
@@ -216,7 +224,6 @@ load_elf(struct vnode *v, vaddr_t *entrypoint)
 	 * might have a larger structure, so we must use e_phentsize
 	 * to find where the phdr starts.
 	 */
-
 	for (i=0; i<eh.e_phnum; i++) {
 		off_t offset = eh.e_phoff + i*eh.e_phentsize;
 		uio_kinit(&iov, &ku, &ph, sizeof(ph), offset, UIO_READ);
@@ -261,7 +268,6 @@ load_elf(struct vnode *v, vaddr_t *entrypoint)
 	/*
 	 * Now actually load each segment.
 	 */
-
 	for (i=0; i<eh.e_phnum; i++) {
 		off_t offset = eh.e_phoff + i*eh.e_phentsize;
 		uio_kinit(&iov, &ku, &ph, sizeof(ph), offset, UIO_READ);
@@ -288,9 +294,9 @@ load_elf(struct vnode *v, vaddr_t *entrypoint)
 			return ENOEXEC;
 		}
 
-		result = load_segment(as, v, ph.p_offset, ph.p_vaddr,
+		result = load_segment(/*as, v, ph.p_offset, ph.p_vaddr,
 				      ph.p_memsz, ph.p_filesz,
-				      ph.p_flags & PF_X);
+				      ph.p_flags & PF_X*/ );
 		if (result) {
 			return result;
 		}
