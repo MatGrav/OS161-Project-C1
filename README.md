@@ -80,4 +80,16 @@ I program headers (PHDRs) sono un tipo di entry nella tabella dei program header
 -> Altre informazioni specifiche al segmento.
 In sintesi, mentre l'ELF header contiene informazioni di alto livello sul file ELF nel suo complesso, i program headers forniscono dettagli specifici su come le diverse parti del file dovrebbero essere caricate in memoria durante l'esecuzione. I PHDRs guidano il processo di caricamento e mappatura delle sezioni del file ELF nella memoria virtuale quando il programma viene eseguito.
 
+https://chat.openai.com/share/3393f322-c9cf-4b4b-8d6d-8a38ffb470a0
+
+In os161 non abbiamo una struct segment (forse) perché allochiamo tutto in un'unica botta e l'indirizzo è unico, con tutti gli altri contigui i think.
+Nel nostro caso, potremmo avere una cosa del genere
+'struct segment {
+    vaddr_t vaddr;        // Indirizzo virtuale del segmento
+    size_t memsize;       // Dimensione in memoria virtuale del segmento
+    size_t filesize;      // Dimensione effettiva del segmento nel file ELF
+    bool is_loaded;       // Flag per indicare se il segmento è stato caricato in memoria
+    // Altre informazioni specifiche del segmento, se necessario
+};'
+
 
