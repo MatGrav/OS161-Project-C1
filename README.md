@@ -92,4 +92,8 @@ Nel nostro caso, potremmo avere una cosa del genere
     // Altre informazioni specifiche del segmento, se necessario
 };```
 
+memsize rappresenta lo spazio riservato nello spazio di indirizzamento del processo, mentre filesize rappresenta la quantità di dati effettivamente archiviata nel file ELF per quel segmento. "filesize" può essere più piccolo, uguale o persino più grande di "memsize".
+
+Esempio pratico per capirne la differenza al seguente link:
+https://chat.openai.com/share/3393f322-c9cf-4b4b-8d6d-8a38ffb470a0/continue
 
