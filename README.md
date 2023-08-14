@@ -84,12 +84,12 @@ https://chat.openai.com/share/3393f322-c9cf-4b4b-8d6d-8a38ffb470a0
 
 In os161 non abbiamo una struct segment (forse) perché allochiamo tutto in un'unica botta e l'indirizzo è unico, con tutti gli altri contigui i think.
 Nel nostro caso, potremmo avere una cosa del genere
-'struct segment {
+'''struct segment {
     vaddr_t vaddr;        // Indirizzo virtuale del segmento
     size_t memsize;       // Dimensione in memoria virtuale del segmento
     size_t filesize;      // Dimensione effettiva del segmento nel file ELF
     bool is_loaded;       // Flag per indicare se il segmento è stato caricato in memoria
     // Altre informazioni specifiche del segmento, se necessario
-};'
+};'''
 
 
