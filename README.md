@@ -54,6 +54,30 @@ La logica con cui si accede al corrispondente valore fisico di un indirizzo è i
 pt_map() -> pongo in ingresso il fisico e il virtuale, dal virtuale dividendo per PAGE_SIZE ottengo l'indice di pagina che sfrutto anche come indice del vettore in cui inserire il corrispondente valore fisico
 pt_translate()-> una volta inseriti i valori fisici, per tradurre un indirizzo virtuale basterà semplicemente ottenere l'indice (sempre dividendo per PAGE_SIZE) e accedere all'i-esima posizione del vettore all'interno della struct pagetable.
 
+## SEGMENTI
+L'ELF header e il program header (PHDR) sono entrambi elementi fondamentali dei file ELF (Executable and Linkable Format), ma svolgono ruoli diversi all'interno di un file ELF.
 
+ELF Header (ELF Header File):
+L'ELF header (intestazione ELF) è la prima parte di un file ELF e contiene informazioni generali e di alto livello sul file stesso. Queste informazioni includono:
+
+-> Il tipo di file ELF (eseguibile, condiviso, oggetto, ecc.).
+-> L'architettura di destinazione (es. x86, ARM, MIPS, ecc.).
+-> La versione dell'ELF.
+-> L'indirizzo di punto di ingresso (entry point) del programma, cioè dove inizia l'esecuzione.
+-> Offset in cui inizia la tabella dei program headers (PHDRs).
+-> Offset in cui inizia la tabella delle section headers (SHDRs).
+-> Altri dettagli di gestione.
+In sostanza, l'ELF header fornisce informazioni di alto livello sull'organizzazione del file ELF e su come dovrebbe essere trattato e caricato dal sistema operativo o dal linker.
+
+Program Header (PHDR):
+I program headers (PHDRs) sono un tipo di entry nella tabella dei program headers all'interno del file ELF. Ogni entry PHDR definisce un segmento di memoria e fornisce informazioni su come quel segmento dovrebbe essere caricato in memoria durante l'esecuzione. Queste informazioni includono:
+
+-> Il tipo di segmento (caricabile, dinamico, ecc.).
+-> L'offset all'interno del file ELF da cui inizia il segmento.
+-> L'indirizzo virtuale a cui il segmento dovrebbe essere mappato in memoria.
+-> Le dimensioni del segmento nel file e in memoria.
+-> Autorizzazioni di accesso (lettura, scrittura, esecuzione).
+-> Altre informazioni specifiche al segmento.
+In sintesi, mentre l'ELF header contiene informazioni di alto livello sul file ELF nel suo complesso, i program headers forniscono dettagli specifici su come le diverse parti del file dovrebbero essere caricate in memoria durante l'esecuzione. I PHDRs guidano il processo di caricamento e mappatura delle sezioni del file ELF nella memoria virtuale quando il programma viene eseguito.
 
 
