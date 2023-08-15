@@ -4,6 +4,7 @@
 struct segment{
     vaddr_t vaddr; /* Virtual address of the segment */
     size_t memsize; /* Segment size reserved for the segment in virtual memory */
+    size_t npage; /* Number of pages, useful for paging algorithm */
     size_t filesize; /* Segment size in the ELF file */
     size_t offset;
     unsigned int is_loaded;
@@ -22,7 +23,8 @@ struct segment{
 #define S_EX 1 /* Execute */
 #define S_RW 2 /* Read-write*/
 
+struct segment* segment_create(void);
 void segment_init(struct segment *s);
-
+int segment_copy(struct segment*, struct segment**);
 
 #endif

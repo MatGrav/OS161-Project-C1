@@ -35,6 +35,8 @@
 #include <proc.h>
 
 #include <segment.h>
+#include <novavm.h>
+#include <pt.h>
 
 /*
  * Note! If OPT_DUMBVM is set, as is the case until you start the VM
@@ -52,9 +54,9 @@ as_create(void)
 		return NULL;
 	}
 
-	/*
-	 * Initialize as needed.
-	 */
+	as->code=segment_create();
+	as->data=segment_create();
+	as->stack=segment_create();
 
 	return as;
 }
@@ -64,16 +66,41 @@ as_copy(struct addrspace *old, struct addrspace **ret)
 {
 	struct addrspace *newas;
 
+	novavm_can_sleep();
+
 	newas = as_create();
 	if (newas==NULL) {
 		return ENOMEM;
 	}
 
-	/*
-	 * Write this.
-	 */
+	newas->code = segment_copy(old->code);
+	newas->data = segment_copy(old->data);
+	newas->stack = segment_copy(old->stack);
 
-	(void)old;
+
+	if (as_prepare_load(new)) {
+		as_destroy(new);
+		return ENOMEM;
+	}
+
+	KASSERT(pt_get_page(new->code.vaddr) != 0);
+	KASSERT(pt_get_page(new->data.vaddr) != 0);
+	KASSERT(pt_get_page(new->stack.vaddr) != 0);
+
+	/*
+	???????????????????????????
+	memmove((void *)PADDR_TO_KVADDR(new->as_pbase1),
+		(const void *)PADDR_TO_KVADDR(old->as_pbase1),
+		old->as_npages1*PAGE_SIZE);
+
+	memmove((void *)PADDR_TO_KVADDR(new->as_pbase2),
+		(const void *)PADDR_TO_KVADDR(old->as_pbase2),
+		old->as_npages2*PAGE_SIZE);
+
+	memmove((void *)PADDR_TO_KVADDR(new->as_stackpbase),
+		(const void *)PADDR_TO_KVADDR(old->as_stackpbase),
+		DUMBVM_STACKPAGES*PAGE_SIZE);
+	*/
 
 	*ret = newas;
 	return 0;
@@ -82,10 +109,15 @@ as_copy(struct addrspace *old, struct addrspace **ret)
 void
 as_destroy(struct addrspace *as)
 {
-	/*
-	 * Clean up as needed.
-	 */
+	novavm_can_sleep();
 
+	freeppages(pt_get_page(as->code.vaddr), as->code.npage);
+	freeppages(pt_get_page(as->data.vaddr), as->data.npage);
+	freeppages(pt_get_page(as->stack.vaddr), as->stack.npage);
+
+	kfree(as->code);
+	kfree(as->data);
+	kfree(as->stack);
 	kfree(as);
 }
 
@@ -103,9 +135,15 @@ as_activate(void)
 		return;
 	}
 
-	/*
-	 * Write this.
-	 */
+	/* Disable interrupts on this CPU while frobbing the TLB. */
+	spl = splhigh();
+
+	/* Maybe to modify when implementing tlb management */
+	for (i=0; i<NUM_TLB; i++) {
+		tlb_write(TLBHI_INVALID(i), TLBLO_INVALID(), i);
+	}
+
+	splx(spl);
 }
 
 void
@@ -132,36 +170,109 @@ int
 as_define_region(struct addrspace *as, vaddr_t vaddr, size_t memsize,
 		 int readable, int writeable, int executable)
 {
-	/*
-	 * Write this.
-	 */
+	size_t npages;
 
-	(void)as;
-	(void)vaddr;
-	(void)memsize;
+	novavm_can_sleep();
+
+	/* Align the region. First, the base... */
+	sz += vaddr & ~(vaddr_t)PAGE_FRAME;
+	vaddr &= PAGE_FRAME;
+
+	/* ...and now the length. */
+	sz = (sz + PAGE_SIZE - 1) & PAGE_FRAME;
+
+	npages = sz / PAGE_SIZE;
+
+	if (as->code.vaddr==0){
+		as->code.vaddr=vaddr;
+		as->code.as=as;
+		as->code.memsize=memsize;
+		as->code.npage=npages;
+		//as->code.permission
+		//as->code.file_elf
+		//as->code.filesize
+		//as->code.offset
+		return 0;
+	}
+
+	if (as->data.vaddr==0){
+		as->data.vaddr=vaddr;
+		as->data.as=as;
+		as->data.memsize=memsize;
+		as->data.npage=npages;
+		//as->code.permission
+		//as->code.file_elf
+		//as->code.filesize
+		//as->code.offset
+		return 0;
+	}
+
+	/*
+	
+	Stack?
+
+	if (as->stack.vaddr==0){
+		as->stack.vaddr=vaddr;
+		as->stack.as=as;
+		as->stack.memsize=memsize;
+		as->stack.npage=npages;
+		//as->stack.permission
+		//as->stack.file_elf
+		//as->stack.filesize
+		//as->stack.offset
+		return 0;
+	}
+	*/
+
+
 	(void)readable;
 	(void)writeable;
 	(void)executable;
+	
+
+	/*
+	 * Support for more than two regions is not available.
+	 */
+	kprintf("dumbvm: Warning: too many regions\n");
 	return ENOSYS;
 }
 
 int
 as_prepare_load(struct addrspace *as)
 {
-	/*
-	 * Write this.
-	 */
+	paddr_t p1, p2, p3;
+	KASSERT(pt_get_page(as->code.vaddr) == 0);
+	KASSERT(pt_get_page(as->data.vaddr) == 0);
+	KASSERT(pt_get_page(as->stack.vaddr) == 0);
 
-	(void)as;
+	novavm_can_sleep();
+
+	p1=getppages(as->code.npage);
+	if (p1 == 0) {
+		return ENOMEM;
+	}
+	p2=getppages(as->data.npage);
+	if (p2 == 0) {
+		return ENOMEM;
+	}
+	p3=getppages(as->stack.npage);
+	if (p3 == 0) {
+		return ENOMEM;
+	}
+
+	/*
+	as_zero_region(as->as_pbase1, as->as_npages1);
+	as_zero_region(as->as_pbase2, as->as_npages2);
+	as_zero_region(as->as_stackpbase, DUMBVM_STACKPAGES);
+	*/
+
 	return 0;
 }
 
 int
 as_complete_load(struct addrspace *as)
 {
-	/*
-	 * Write this.
-	 */
+	novavm_can_sleep();
 
 	(void)as;
 	return 0;
@@ -170,13 +281,11 @@ as_complete_load(struct addrspace *as)
 int
 as_define_stack(struct addrspace *as, vaddr_t *stackptr)
 {
-	/*
-	 * Write this.
-	 */
+	KASSERT(pt_get_page(as->stack.vaddr) != 0);
 
-	(void)as;
 
 	/* Initial user-level stack pointer */
+	// ??????????????
 	*stackptr = USERSTACK;
 
 	return 0;

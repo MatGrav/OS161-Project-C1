@@ -106,7 +106,6 @@ load_segment(/*struct addrspace *as, struct vnode *v,
 		u.uio_segflg = UIO_USERISPACE
 	} else {
 		u.uio_segflg = UIO_USERSPACE;
-
 	}
 	u.uio_rw = UIO_READ; //?
 	u.uio_space = s->as;
@@ -167,6 +166,8 @@ load_elf(struct vnode *v, vaddr_t *entrypoint)
 	struct iovec iov;
 	struct uio ku;
 	struct addrspace *as;
+
+	struct segment *s;
 
 	as = proc_getas();
 
