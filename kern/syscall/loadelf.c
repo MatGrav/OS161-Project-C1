@@ -96,14 +96,14 @@ load_segment(/*struct addrspace *as, struct vnode *v,
 	      (unsigned long) s->filesize, (unsigned long) s->vaddr);
 	
 
-	iov.iov_ubase = s->vaddr;
+	iov.iov_ubase = (userptr_t) s->vaddr;
 	iov.iov_len = s->memsize;		 // length of the memory space
 	u.uio_iov = &iov;
 	u.uio_iovcnt = 1;
 	u.uio_resid = s->filesize;          // amount to read from the file
 	u.uio_offset = s->offset;
 	if (s->permission==S_EX){
-		u.uio_segflg = UIO_USERISPACE
+		u.uio_segflg = UIO_USERISPACE;
 	} else {
 		u.uio_segflg = UIO_USERSPACE;
 	}
@@ -295,9 +295,11 @@ load_elf(struct vnode *v, vaddr_t *entrypoint)
 			return ENOEXEC;
 		}
 
+		s=segment_create();
+
 		result = load_segment(/*as, v, ph.p_offset, ph.p_vaddr,
 				      ph.p_memsz, ph.p_filesz,
-				      ph.p_flags & PF_X*/ );
+				      ph.p_flags & PF_X*/ s);
 		if (result) {
 			return result;
 		}

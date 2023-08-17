@@ -42,6 +42,9 @@ struct addrspace *newas;
     newas->file_elf=old->file_elf;
     newas->as=old->as;
 
-	*ret = newas;
+	*ret = newas; /* we pass the segment here */
+
 	return 0;
 }
+
+

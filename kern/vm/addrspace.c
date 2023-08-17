@@ -38,6 +38,8 @@
 #include <novavm.h>
 #include <pt.h>
 
+#include <spl.h>
+
 /*
  * Note! If OPT_DUMBVM is set, as is the case until you start the VM
  * assignment, this file is not compiled or linked or in any way
@@ -78,8 +80,8 @@ as_copy(struct addrspace *old, struct addrspace **ret)
 	newas->stack = segment_copy(old->stack);
 
 
-	if (as_prepare_load(new)) {
-		as_destroy(new);
+	if (as_prepare_load(newas)) {
+		as_destroy(newas);
 		return ENOMEM;
 	}
 
@@ -185,7 +187,7 @@ as_define_region(struct addrspace *as, vaddr_t vaddr, size_t memsize,
 
 	if (as->code.vaddr==0){
 		as->code.vaddr=vaddr;
-		as->code.as=as;
+		as->code.as= &as;
 		as->code.memsize=memsize;
 		as->code.npage=npages;
 		//as->code.permission
@@ -247,6 +249,7 @@ as_prepare_load(struct addrspace *as)
 
 	novavm_can_sleep();
 
+	/* ATTENZIONE: l'address space deve lavorare con l'indirizzo virtuale, non fisico  */
 	p1=getppages(as->code.npage);
 	if (p1 == 0) {
 		return ENOMEM;

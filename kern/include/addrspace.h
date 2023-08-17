@@ -38,8 +38,10 @@
 #include <vm.h>
 #include "opt-dumbvm.h"
 
-struct vnode;
+// #include <segment.h>
 
+struct vnode;
+struct segment;
 
 /*
  * Address space - data structure associated with the virtual memory
@@ -61,6 +63,7 @@ struct addrspace {
         struct segment code;
         struct segment data;
         struct segment stack;
+        // puntatore a pt?
 #endif
 };
 

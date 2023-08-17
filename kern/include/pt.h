@@ -1,6 +1,9 @@
 #ifndef _PT_H_
 #define _PT_H_
 
+#include <lib.h>
+#include <types.h>
+
 #define PT_SIZE get_nRamFrames()/2
 
 #define EMPTY 0

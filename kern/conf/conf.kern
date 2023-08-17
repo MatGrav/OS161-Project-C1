@@ -353,6 +353,8 @@ optfile novavm vm/novavm.c
 optfile novavm vm/coremap.c
 #optfile novavm arch/mips/vm/novavm.c
 #optofffile novavm arch/mips/vm/dumbvm.c
+optfile novavm vm/pt.c
+optfile novavm vm/segment.c
 
 optofffile dumbvm   vm/addrspace.c
 
