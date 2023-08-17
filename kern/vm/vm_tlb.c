@@ -11,7 +11,12 @@ int tlb_get_rr_victim(){
     return victim;
 }
 
-// tlb_get_page --> 
+// tlb_get_page --> Penso che se ne occupi una MMU virtuale (forse mips.c -> translatemem che chiama una tlblookup)
+// Altre info a https://www.cse.unsw.edu.au/~learn/debugging/modules/trace_161/
+// https://ops-class.org/asst/3/
+
+
+
 // tlb_miss define? chiama la pt_get_page() e fa l'update
 // tlb_hit define?
 // tlb_update
