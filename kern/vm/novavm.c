@@ -36,7 +36,7 @@ novavm_can_sleep(void)
 int
 vm_fault(int faulttype, vaddr_t faultaddress)
 {
-	vaddr_t vbase1, vtop1, vbase2, vtop2, stackbase, stacktop;
+	//vaddr_t vbase1, vtop1, vbase2, vtop2, stackbase, stacktop;
 	paddr_t paddr;
 	int i;
 	uint32_t ehi, elo;
@@ -50,13 +50,16 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	switch (faulttype) {
 		// TO DO
 	    case VM_FAULT_READONLY:
-		/* We always create pages read-write, so we can't get this */
-		panic("dumbvm: got VM_FAULT_READONLY\n");
+			/* We always create pages read-write, so we can't get this */
+			panic("dumbvm: got VM_FAULT_READONLY\n");
 	    case VM_FAULT_READ:
+			/*Should do something?*/
+			break;
 	    case VM_FAULT_WRITE:
-		break;
+			/*Should do something?*/
+			break;
 	    default:
-		return EINVAL;
+			return EINVAL;
 	}
 
 	if (curproc == NULL) {
@@ -78,19 +81,30 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	}
 
 	/* Assert that the address space has been set up properly. */
-	// TO DO
-	KASSERT(as->as_vbase1 != 0);
-	KASSERT(as->as_pbase1 != 0);
-	KASSERT(as->as_npages1 != 0);
-	KASSERT(as->as_vbase2 != 0);
-	KASSERT(as->as_pbase2 != 0);
-	KASSERT(as->as_npages2 != 0);
-	KASSERT(as->as_stackpbase != 0);
-	KASSERT((as->as_vbase1 & PAGE_FRAME) == as->as_vbase1);
-	KASSERT((as->as_pbase1 & PAGE_FRAME) == as->as_pbase1);
-	KASSERT((as->as_vbase2 & PAGE_FRAME) == as->as_vbase2);
-	KASSERT((as->as_pbase2 & PAGE_FRAME) == as->as_pbase2);
-	KASSERT((as->as_stackpbase & PAGE_FRAME) == as->as_stackpbase);
+	/* TO DO
+	
+	 |
+	 |
+	 v
+	
+	I think we should change addrspace to have pointers to segments */
+	KASSERT(as->code  != NULL);
+	KASSERT(as->data  != NULL);
+	KASSERT(as->stack != NULL);
+
+	KASSERT((as->code->vaddr & PAGE_FRAME) == as->code->vaddr);
+	KASSERT((as->data->vaddr & PAGE_FRAME) == as->data->vaddr);
+	KASSERT((as->stack->vaddr & PAGE_FRAME) == as->data->vaddr);
+
+	//TO DO:
+	// paddr = pt_get_page? (faultaddress)
+
+	if(paddr == NULL){
+		return EFAULT;
+	}
+
+	/* 
+	SHOULD BE ERASED?
 
 	vbase1 = as->code.vaddr;
 	vtop1 = vbase1 + as->as_npage * PAGE_SIZE;
@@ -105,14 +119,16 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	}
 
 	else if (faultaddress >= vbase2 && faultaddress < vtop2) {
-		paddr = (faultaddress - vbase2) + as->as_pbase2;
+		paddr = (faultaddress - vbase2) + pt_get_page(as->data.vaddr);
 	}
 	else if (faultaddress >= stackbase && faultaddress < stacktop) {
-		paddr = (faultaddress - stackbase) + as->as_stackpbase;
+		paddr = (faultaddress - stackbase) + pt_get_page(as->stack.vaddr);
 	}
 	else {
 		return EFAULT;
 	}
+	*/
+
 
 	/* make sure it's page-aligned */
 	KASSERT((paddr & PAGE_FRAME) == paddr);
@@ -133,7 +149,14 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 		return 0;
 	}
 
-	kprintf("dumbvm: Ran out of TLB entries - cannot handle page fault\n");
+	/* At this point dumbvm, running out of entries, couldn't handle pf
+	returning EFAULT*/
+	tlb_write(ehi,elo,tlb_get_rr_victim());
+	splx(spl);
+	return 0;
+
+
+	kprintf("novavm: We shouldn't have reached this instruction...\n");
 	splx(spl);
 	return EFAULT;
 }

@@ -140,7 +140,8 @@ as_activate(void)
 	/* Disable interrupts on this CPU while frobbing the TLB. */
 	spl = splhigh();
 
-	/* Maybe to modify when implementing tlb management */
+	/* Our choice was to keep the flush of TLB during context-switch,
+	which includes a call to as_activate */
 	for (i=0; i<NUM_TLB; i++) {
 		tlb_write(TLBHI_INVALID(i), TLBLO_INVALID(), i);
 	}
@@ -285,6 +286,7 @@ int
 as_define_stack(struct addrspace *as, vaddr_t *stackptr)
 {
 	KASSERT(pt_get_page(as->stack.vaddr) != 0);
+	//KASSERT(pt_get_page(as->stack->vaddr) != 0);
 
 
 	/* Initial user-level stack pointer */

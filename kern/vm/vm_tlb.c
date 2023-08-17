@@ -11,12 +11,12 @@ int tlb_get_rr_victim(){
     return victim;
 }
 
-// tlb_get_page
+// tlb_get_page --> 
 // tlb_miss define? chiama la pt_get_page() e fa l'update
 // tlb_hit define?
 // tlb_update
-// tlb_substitute
-// tlb_get_rr_victim
+// tlb_substitute -->
+
 
 
 

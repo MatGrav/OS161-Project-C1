@@ -60,10 +60,14 @@ struct addrspace {
         size_t as_npages2;
         paddr_t as_stackpbase;
 #else
-        struct segment code;
-        struct segment data;
-        struct segment stack;
+        //struct segment code;
+        //struct segment data;
+        //struct segment stack;
         // puntatore a pt?
+        
+        struct segment* code;
+        struct segment* data;
+        struct segment* stack;         
 #endif
 };
 
