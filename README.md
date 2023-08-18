@@ -90,7 +90,8 @@ Nel nostro caso, potremmo avere una cosa del genere
     size_t filesize;      // Dimensione effettiva del segmento nel file ELF
     bool is_loaded;       // Flag per indicare se il segmento è stato caricato in memoria
     // Altre informazioni specifiche del segmento, se necessario
-};``` 
+};
+```
 
 memsize rappresenta lo spazio riservato nello spazio di indirizzamento del processo, mentre filesize rappresenta la quantità di dati effettivamente archiviata nel file ELF per quel segmento. "filesize" può essere più piccolo, uguale o persino più grande di "memsize".
 
