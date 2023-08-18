@@ -50,6 +50,25 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	switch (faulttype) {
 		// TO DO
 	    case VM_FAULT_READONLY:
+
+			/*
+			In the dumbvm system, all three address-space segments (text, data, and stack) are both
+			readable and writable by the application. For this assignment, you should change this so
+			that each application’s text segment is read-only. Your kernel should set up TLB entries so
+			that any attempt by an application to modify its text section will cause the MIPS MMU togenerate a
+			read-only memory exception (VM_FAULT_READONLY). 
+			If such an exception occurs, your kernel should terminate the process that attempted to modify its text segment.
+			Your kernel should not crash.*/
+
+			/*
+			 if (/* tua condizione per terminare il processo */) {
+        	// Ottieni il processo corrente
+        	struct proc *current_proc = curproc;
+
+        	// Invia un segnale di terminazione al processo corrente
+        	proc_kill(current_proc, SIGKILL);
+
+			*/
 			/* We always create pages read-write, so we can't get this */
 			panic("dumbvm: got VM_FAULT_READONLY\n");
 	    case VM_FAULT_READ:
@@ -154,11 +173,6 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	tlb_write(ehi,elo,tlb_get_rr_victim());
 	splx(spl);
 	return 0;
-
-
-	kprintf("novavm: We shouldn't have reached this instruction...\n");
-	splx(spl);
-	return EFAULT;
 }
 
 /* TLB shootdown handling called from interprocessor_interrupt */

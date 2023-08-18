@@ -1,5 +1,4 @@
-#ifndef _VM_TLB_H
-#define _VM_TLB_H
+#include <vm_tlb.h>
 
 #include <tlb.h>
 
@@ -22,7 +21,3 @@ int tlb_get_rr_victim(){
 // tlb_update
 // tlb_substitute -->
 
-
-
-
-#endif

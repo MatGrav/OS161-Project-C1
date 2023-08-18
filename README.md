@@ -97,3 +97,13 @@ memsize rappresenta lo spazio riservato nello spazio di indirizzamento del proce
 Esempio pratico per capirne la differenza al seguente link:
 https://chat.openai.com/share/3393f322-c9cf-4b4b-8d6d-8a38ffb470a0/continue
 
+## TLB
+
+In os161 è già presente una TLB con 64 entries (kern/arch/mips/include/tlb.h). Il meccanismo della traduzione da indirizzo virtuale a logico che passa tramite la ricerca nella TLB NON va implementato da noi, essendo già presente (presumibilmente in toolbuild/sys161-2.0.8/mipseb/mips.c in cui un'architettura MIPS e una MMU? vengono simulate), per cui il flow è:
+
+
+indirizzo virtuale --> TLB look up  -->  NO TLB HIT? -->   [HW sets BADVADDR,raises exception; OS161 sees VM_FAULT_READ or VM_FAULT_WRITE ] ==> gestiamo la vm_fault all'interno della quale chiediamo alla tabella delle pagine l'indirizzo fisico così da aggiungere/sostituire una entry nella TLB
+
+LA vm_fault viene chiamata in mips_trap(..) in 'os161-base-2.0.3/kern/arch/mips/locore/trap.c' che controlla il codice di "eccezione", codici relativi a IRQ e syscall sono gestiti rispettivamente  da mainbus_interrupt() e syscall(), altrimenti chiama la vm_fault per codici relativi a eccezioni TLB, che sono VM_FAULT_READONLY/READ/WRITE
+
+programma per testare la sostituzione nella tlb? (p testbin/huge)
