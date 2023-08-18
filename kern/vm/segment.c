@@ -24,25 +24,25 @@ segment_init(struct segment *s){
 
 int
 segment_copy(struct segment *old, struct segment **ret){
-struct addrspace *newas;
+    struct segment *newsg;
 
-	newas = segment_create();
-	if (newas==NULL) {
+	newsg = segment_create();
+	if (newsg==NULL) {
 		return -1;
 	}
 
-	newas->vaddr=old->vaddr;
-    newas->memsize=old->memsize;
-    newas->npage=old->npage;
-    newas->filesize=old->filesize;
-    newas->offset=old->offset;
-    newas->is_loaded=NOT_LOADED; //LOADED?
+	newsg->vaddr=old->vaddr;
+    newsg->memsize=old->memsize;
+    newsg->npage=old->npage;
+    newsg->filesize=old->filesize;
+    newsg->offset=old->offset;
+    newsg->is_loaded=NOT_LOADED; //LOADED?
     //Have to load?
-    newas->permission=old->permission;
-    newas->file_elf=old->file_elf;
-    newas->as=old->as;
+    newsg->permission=old->permission;
+    newsg->file_elf=old->file_elf;
+    newsg->as=old->as;
 
-	*ret = newas; /* we pass the segment here */
+	*ret = newsg; /* we pass the segment here */
 
 	return 0;
 }

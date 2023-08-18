@@ -33,13 +33,16 @@
 #include <addrspace.h>
 #include <vm.h>
 #include <proc.h>
-#include <tlb.h>
 
 #include <segment.h>
 #include <novavm.h>
+#include <coremap.h>
 #include <pt.h>
 
 #include <spl.h>
+
+#include <mips/tlb.h>
+
 
 
 
@@ -78,9 +81,9 @@ as_copy(struct addrspace *old, struct addrspace **ret)
 		return ENOMEM;
 	}
 
-	newas->code = segment_copy(old->code);
-	newas->data = segment_copy(old->data);
-	newas->stack = segment_copy(old->stack);
+	if (segment_copy(old->code,&(newas->code)) != 0) {return ENOMEM;}
+	if (segment_copy(old->data, &(newas->data)) != 0) {return ENOMEM;}
+	if (segment_copy(old->stack, &(newas->stack)) != 0) {return ENOMEM;}
 
 
 	if (as_prepare_load(newas)) {
@@ -88,9 +91,10 @@ as_copy(struct addrspace *old, struct addrspace **ret)
 		return ENOMEM;
 	}
 
-	KASSERT(pt_get_page(new->code->vaddr) != 0);
-	KASSERT(pt_get_page(new->data->vaddr) != 0);
-	KASSERT(pt_get_page(new->stack->vaddr) != 0);
+	// TO DO
+	//KASSERT(pt_get_page(newas->code->vaddr) != 0);
+	//KASSERT(pt_get_page(newas->data->vaddr) != 0);
+	//KASSERT(pt_get_page(newas->stack->vaddr) != 0);
 
 	/*
 	???????????????????????????
@@ -116,9 +120,12 @@ as_destroy(struct addrspace *as)
 {
 	novavm_can_sleep();
 
+	// TO DO: Uhm freeppages is static, therefore not visible ?
+	/*
 	freeppages(pt_get_page(as->code->vaddr), as->code->npage);
 	freeppages(pt_get_page(as->data->vaddr), as->data->npage);
 	freeppages(pt_get_page(as->stack->vaddr), as->stack->npage);
+	*/
 
 	kfree(as->code);
 	kfree(as->data);
@@ -130,7 +137,7 @@ void
 as_activate(void)
 {
 	struct addrspace *as;
-	int spl;
+	int spl,i;
 
 	as = proc_getas();
 	if (as == NULL) {
@@ -182,17 +189,17 @@ as_define_region(struct addrspace *as, vaddr_t vaddr, size_t memsize,
 	novavm_can_sleep();
 
 	/* Align the region. First, the base... */
-	sz += vaddr & ~(vaddr_t)PAGE_FRAME;
+	memsize += vaddr & ~(vaddr_t)PAGE_FRAME;
 	vaddr &= PAGE_FRAME;
 
 	/* ...and now the length. */
-	sz = (sz + PAGE_SIZE - 1) & PAGE_FRAME;
+	memsize = (memsize + PAGE_SIZE - 1) & PAGE_FRAME;
 
-	npages = sz / PAGE_SIZE;
+	npages = memsize / PAGE_SIZE;
 
 	if (as->code->vaddr==0){
 		as->code->vaddr=vaddr;
-		as->code->as= &as;
+		as->code->as= as;
 		as->code->memsize=memsize;
 		as->code->npage=npages;
 		//as->code->permission
@@ -247,26 +254,32 @@ as_define_region(struct addrspace *as, vaddr_t vaddr, size_t memsize,
 int
 as_prepare_load(struct addrspace *as)
 {
-	paddr_t p1, p2, p3;
+	(void)as;
+	paddr_t p1=0, p2=0, p3=0;
+	/* TO DO
 	KASSERT(pt_get_page(as->code->vaddr) == 0);
 	KASSERT(pt_get_page(as->data->vaddr) == 0);
 	KASSERT(pt_get_page(as->stack->vaddr) == 0);
+	*/
 
 	novavm_can_sleep();
 
 	/* ATTENZIONE: l'address space deve lavorare con l'indirizzo virtuale, non fisico  */
-	p1=getppages(as->code->npage);
+	/* TO DO: getppages è static, non visibile in addrspace.c --> ?? */
+	
+	//p1=getppages(as->code->npage);
 	if (p1 == 0) {
 		return ENOMEM;
 	}
-	p2=getppages(as->data->npage);
+	//p2=getppages(as->data->npage);
 	if (p2 == 0) {
 		return ENOMEM;
 	}
-	p3=getppages(as->stack->npage);
+	//p3=getppages(as->stack->npage);
 	if (p3 == 0) {
 		return ENOMEM;
 	}
+
 
 	/*
 	as_zero_region(as->as_pbase1, as->as_npages1);
@@ -289,7 +302,8 @@ as_complete_load(struct addrspace *as)
 int
 as_define_stack(struct addrspace *as, vaddr_t *stackptr)
 {
-	KASSERT(pt_get_page(as->stack->vaddr) != 0);
+	(void)as;
+	//KASSERT(pt_get_page(as->stack->vaddr) != 0);
 	//KASSERT(pt_get_page(as->stack->vaddr) != 0);
 
 

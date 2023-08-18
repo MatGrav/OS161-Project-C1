@@ -11,4 +11,4 @@ novavm.o: ../../vm/novavm.c ../../include/types.h \
  ../../include/setjmp.h includelinks/kern/machine/setjmp.h \
  includelinks/mips/tlb.h ../../include/addrspace.h ../../include/vm.h \
  opt-dumbvm.h ../../include/novavm.h ../../include/coremap.h \
- ../../include/pt.h
+ ../../include/pt.h ../../include/segment.h ../../include/vm_tlb.h

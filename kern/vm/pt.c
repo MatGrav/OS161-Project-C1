@@ -43,6 +43,7 @@ void pt_destroy(){
 
 //Chi la chiama? "p" è l'indirizzo fisico specifico o della pagina?
 void pt_map(paddr_t p, vaddr_t v){
+    /*
     unsigned int i = (unsigned int) v/PAGE_SIZE;
     if(i>PT_SIZE){
         return;
@@ -51,7 +52,7 @@ void pt_map(paddr_t p, vaddr_t v){
     spinlock_acquire(&free_pt);
     pt->paddr[i]=p;
     spinlock_release(&free_pt);
-
+    */
     return 0;
 }
 

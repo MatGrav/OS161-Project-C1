@@ -150,6 +150,7 @@ getfreeppages(unsigned long npages) {
       cmap->entry[i].consec_pages = np;
 
       /* Free entries should also be removed from cmap np*/
+      rem_head();
       /* TO DO*/
     }
     addr = (paddr_t) cmap->entry[found].frame_addr;
@@ -240,7 +241,7 @@ alloc_kpages(unsigned npages)
 
 void free_kpages(vaddr_t addr){
   if (isCoremapActive()) {
-    paddr_t paddr = NULL;
+    paddr_t paddr;
     //TO DO I think: Substitute the code with one asking page table the phys address
     paddr = addr - MIPS_KSEG0;
     // paddr = pt_something(addr)

@@ -1,6 +1,8 @@
 #ifndef _SEGMENT_H_
 #define _SEGMENT_H_
 
+#include <types.h>
+
 struct segment{
     vaddr_t vaddr; /* Virtual address of the segment */
     size_t memsize; /* Segment size reserved for the segment in virtual memory */

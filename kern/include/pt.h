@@ -6,7 +6,11 @@
 
 #include <coremap.h>
 
-#define PT_SIZE get_nRamFrames()/2
+// TO DO : sOlve this problem
+//The following thing does not compile
+//#define PT_SIZE get_nRamFrames()/2
+
+#define PT_SIZE 1024*1024
 
 #define EMPTY 0
 #define INVALID_MAP 1
@@ -14,7 +18,7 @@
 /* Fare FORSE struct page e poi in pagetable vettore di page */
 
 struct pagetable{
-    //paddr_t paddr[PT_SIZE];
+    paddr_t paddr[PT_SIZE];
     /* to do */
 };
 
