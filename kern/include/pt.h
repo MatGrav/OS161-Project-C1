@@ -4,6 +4,8 @@
 #include <lib.h>
 #include <types.h>
 
+#include <coremap.h>
+
 #define PT_SIZE get_nRamFrames()/2
 
 #define EMPTY 0
@@ -12,7 +14,7 @@
 /* Fare FORSE struct page e poi in pagetable vettore di page */
 
 struct pagetable{
-    paddr_t paddr[PT_SIZE];
+    //paddr_t paddr[PT_SIZE];
     /* to do */
 };
 

@@ -33,12 +33,15 @@
 #include <addrspace.h>
 #include <vm.h>
 #include <proc.h>
+#include <tlb.h>
 
 #include <segment.h>
 #include <novavm.h>
 #include <pt.h>
 
 #include <spl.h>
+
+
 
 /*
  * Note! If OPT_DUMBVM is set, as is the case until you start the VM
@@ -85,9 +88,9 @@ as_copy(struct addrspace *old, struct addrspace **ret)
 		return ENOMEM;
 	}
 
-	KASSERT(pt_get_page(new->code.vaddr) != 0);
-	KASSERT(pt_get_page(new->data.vaddr) != 0);
-	KASSERT(pt_get_page(new->stack.vaddr) != 0);
+	KASSERT(pt_get_page(new->code->vaddr) != 0);
+	KASSERT(pt_get_page(new->data->vaddr) != 0);
+	KASSERT(pt_get_page(new->stack->vaddr) != 0);
 
 	/*
 	???????????????????????????
@@ -113,9 +116,9 @@ as_destroy(struct addrspace *as)
 {
 	novavm_can_sleep();
 
-	freeppages(pt_get_page(as->code.vaddr), as->code.npage);
-	freeppages(pt_get_page(as->data.vaddr), as->data.npage);
-	freeppages(pt_get_page(as->stack.vaddr), as->stack.npage);
+	freeppages(pt_get_page(as->code->vaddr), as->code->npage);
+	freeppages(pt_get_page(as->data->vaddr), as->data->npage);
+	freeppages(pt_get_page(as->stack->vaddr), as->stack->npage);
 
 	kfree(as->code);
 	kfree(as->data);
@@ -127,6 +130,7 @@ void
 as_activate(void)
 {
 	struct addrspace *as;
+	int spl;
 
 	as = proc_getas();
 	if (as == NULL) {
@@ -186,27 +190,27 @@ as_define_region(struct addrspace *as, vaddr_t vaddr, size_t memsize,
 
 	npages = sz / PAGE_SIZE;
 
-	if (as->code.vaddr==0){
-		as->code.vaddr=vaddr;
-		as->code.as= &as;
-		as->code.memsize=memsize;
-		as->code.npage=npages;
-		//as->code.permission
-		//as->code.file_elf
-		//as->code.filesize
-		//as->code.offset
+	if (as->code->vaddr==0){
+		as->code->vaddr=vaddr;
+		as->code->as= &as;
+		as->code->memsize=memsize;
+		as->code->npage=npages;
+		//as->code->permission
+		//as->code->file_elf
+		//as->code->filesize
+		//as->code->offset
 		return 0;
 	}
 
-	if (as->data.vaddr==0){
-		as->data.vaddr=vaddr;
-		as->data.as=as;
-		as->data.memsize=memsize;
-		as->data.npage=npages;
-		//as->code.permission
-		//as->code.file_elf
-		//as->code.filesize
-		//as->code.offset
+	if (as->data->vaddr==0){
+		as->data->vaddr=vaddr;
+		as->data->as=as;
+		as->data->memsize=memsize;
+		as->data->npage=npages;
+		//as->code->permission
+		//as->code->file_elf
+		//as->code->filesize
+		//as->code->offset
 		return 0;
 	}
 
@@ -214,15 +218,15 @@ as_define_region(struct addrspace *as, vaddr_t vaddr, size_t memsize,
 	
 	Stack?
 
-	if (as->stack.vaddr==0){
-		as->stack.vaddr=vaddr;
-		as->stack.as=as;
-		as->stack.memsize=memsize;
-		as->stack.npage=npages;
-		//as->stack.permission
-		//as->stack.file_elf
-		//as->stack.filesize
-		//as->stack.offset
+	if (as->stack->vaddr==0){
+		as->stack->vaddr=vaddr;
+		as->stack->as=as;
+		as->stack->memsize=memsize;
+		as->stack->npage=npages;
+		//as->stack->permission
+		//as->stack->file_elf
+		//as->stack->filesize
+		//as->stack->offset
 		return 0;
 	}
 	*/
@@ -244,22 +248,22 @@ int
 as_prepare_load(struct addrspace *as)
 {
 	paddr_t p1, p2, p3;
-	KASSERT(pt_get_page(as->code.vaddr) == 0);
-	KASSERT(pt_get_page(as->data.vaddr) == 0);
-	KASSERT(pt_get_page(as->stack.vaddr) == 0);
+	KASSERT(pt_get_page(as->code->vaddr) == 0);
+	KASSERT(pt_get_page(as->data->vaddr) == 0);
+	KASSERT(pt_get_page(as->stack->vaddr) == 0);
 
 	novavm_can_sleep();
 
 	/* ATTENZIONE: l'address space deve lavorare con l'indirizzo virtuale, non fisico  */
-	p1=getppages(as->code.npage);
+	p1=getppages(as->code->npage);
 	if (p1 == 0) {
 		return ENOMEM;
 	}
-	p2=getppages(as->data.npage);
+	p2=getppages(as->data->npage);
 	if (p2 == 0) {
 		return ENOMEM;
 	}
-	p3=getppages(as->stack.npage);
+	p3=getppages(as->stack->npage);
 	if (p3 == 0) {
 		return ENOMEM;
 	}
@@ -285,7 +289,7 @@ as_complete_load(struct addrspace *as)
 int
 as_define_stack(struct addrspace *as, vaddr_t *stackptr)
 {
-	KASSERT(pt_get_page(as->stack.vaddr) != 0);
+	KASSERT(pt_get_page(as->stack->vaddr) != 0);
 	//KASSERT(pt_get_page(as->stack->vaddr) != 0);
 
 

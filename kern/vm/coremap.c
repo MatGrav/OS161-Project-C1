@@ -21,14 +21,7 @@ static unsigned int nRamFrames = 0;
 
 static int coremapActive = 0;
 
-unsigned int get_nRamFrames(){
-  /*
-  unsigned int alias;
-  alias = nRamFrames;
-  return alias;
-  */
-  return nRamFrames;
-}
+unsigned int get_nRamFrames(){  return nRamFrames;}
 
 static int isCoremapActive(){
     int active;
@@ -49,11 +42,9 @@ void coremap_init(){
     return;
   }  
 
-
-  /* alloc freeRamFrame and allocSize */  
   cmap->entry = kmalloc(sizeof(struct coremap_entry)*nRamFrames);
   if (cmap->entry==NULL){
-    kprintf("Non ho allocato la cmap enttry\n");
+    kprintf("Non ho allocato la cmap entry\n");
 
     kfree(cmap);
     return;
@@ -70,7 +61,9 @@ void coremap_init(){
   for (i=0; i<nRamFrames; i++) {    
     cmap->entry[i].associated_addr = kmalloc(sizeof(struct addrspace*)*MAX_NUM_ASS_ADDR);
     cmap->entry[i].num_assaddr = 0;
-    cmap->entry[i].frame_addr = i*PAGE_SIZE;   
+    cmap->entry[i].frame_addr = i*PAGE_SIZE;
+    cmap->entry[i].num_assaddr = 0;
+    cmap->entry[i].consec_pages = 0;   
   }
   /* Until now we allocated contiguously by calling the kmalloc which uses
   ram_stealmem since coremap is not active */
@@ -79,7 +72,7 @@ void coremap_init(){
     if(i<firstpaddr/PAGE_SIZE){
         /* Protecting frames used by kernel until now*/
         cmap->entry[i].status = RESERVED;
-
+        cmap->entry[i].consec_pages = UNDEF_CONSEC_PAGES;
     }
     else if(i == firstpaddr/PAGE_SIZE){
         /* firstpaddr may be in the middle of a frame partly used by the kernel,
@@ -87,6 +80,7 @@ void coremap_init(){
         if(firstpaddr % PAGE_SIZE != 0){
             firstpaddr = cmap->entry[i+1].frame_addr;
             cmap->entry[i].status = RESERVED;
+            cmap->entry[i].consec_pages = UNDEF_CONSEC_PAGES;
         }
         else{
             cmap->entry[i].status = FREE;
@@ -125,7 +119,7 @@ void coremap_cleanup(){
 }
 
 
-void rem_head(){
+static void rem_head(){
     if (cmap->np_sz > 0) {
         cmap->np_head = (cmap->np_head + 1) % cmap->np_capacity;
         cmap->np_sz--;
@@ -153,10 +147,11 @@ getfreeppages(unsigned long npages) {
   if (found>=0) {
     for (i=found; i<found+np; i++) {
       cmap->entry[i].status = OCCUPIED;
+      cmap->entry[i].consec_pages = np;
 
       /* Free entries should also be removed from cmap np*/
+      /* TO DO*/
     }
-    //allocSize[found] = np;
     addr = (paddr_t) cmap->entry[found].frame_addr;
   }
   else {
@@ -222,6 +217,8 @@ static int freeppages(paddr_t addr, unsigned long npages){
   spinlock_acquire(&coremap_lock);
   for (i=first; i<first+np; i++) {
     cmap->entry[i].status = FREE;
+    cmap->entry[i].consec_pages = 0;
+    kprintf("DEbug: CLeaning a page\n");
   }
   spinlock_release(&coremap_lock);
 
@@ -243,13 +240,21 @@ alloc_kpages(unsigned npages)
 
 void free_kpages(vaddr_t addr){
   if (isCoremapActive()) {
-    paddr_t paddr = addr - MIPS_KSEG0;
+    paddr_t paddr = NULL;
+    //TO DO I think: Substitute the code with one asking page table the phys address
+    paddr = addr - MIPS_KSEG0;
+    // paddr = pt_something(addr)
+    
     long first = paddr/PAGE_SIZE;	
     KASSERT(cmap->entry!=NULL);
     KASSERT(cmap->size > (unsigned) first);
-    
+
+    spinlock_acquire(&coremap_lock);
+    unsigned int npages = cmap->entry[paddr/PAGE_SIZE].consec_pages;
+    spinlock_release(&coremap_lock);
+
     // TO DO: think about how to find the number of pages
     // We don't have allocSize
-    freeppages(paddr, 1/*allocSize[first] */);	
+    freeppages(paddr, npages);	
   }
 }
