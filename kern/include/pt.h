@@ -12,19 +12,40 @@
 
 #define PT_SIZE 1024*1024
 
+/* Mask to obtain the displacement from a virtual address */
+#define DISPLACEMENT_MASK 0xFFF
+
+/* Status of the entry of the page table*/
 #define EMPTY 0
+#define OCCUPIED 1
+
+/*Page fault types*/
 #define INVALID_MAP 1
+#define NOT_MAPPED 2 /* there is not a corresponding frame */
 
-/* Fare FORSE struct page e poi in pagetable vettore di page */
-
-struct pagetable{
-    paddr_t paddr[PT_SIZE];
-    /* to do */
+struct pt_entry{
+    paddr_t paddr; /* physical address */
+    uint32_t status; /* Present or absent */
+    uint32_t protection; /* read-only, write, read-write*/
+    /*
+    uint32_t modified;
+    uint32_t referenced;
+    uint32_t caching_disabled;
+    */
 };
 
+/* Values of status */
+#define ABSENT 0
+#define PRESENT 1
+
+/* Values of protection */
+#define PT_E_RO 0 /* Read-only */
+#define PT_E_WR 1 /* Write */
+#define PT_E_RW 2 /* Read-write */
 
 void pt_init(void);
 void pt_destroy(void);
+void pt_fault(struct pt_entry*, uint32_t);
 paddr_t pt_get_page(vaddr_t);
 void pt_map(paddr_t, vaddr_t);
 paddr_t pt_translate(vaddr_t);
