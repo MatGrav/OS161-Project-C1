@@ -48,12 +48,33 @@ In dumbvm, sia pre che post laboratorio 2, ci sono le (ri)definizioni delle funz
 Tuttavia, l'implementazione subirà delle modifiche perché presumiamo che la struct addrspace venga modificata (in addrspace.h) per tener conto della non-contiguità dei segmenti codice, data e stack. 
 
 ## PAGE TABLE
+
+Un indirizzo generato dalla CPU è diviso in:
+-> page number(p), usato come indice nella tabella delle pagine, che contiene l'indirizzo base di ogni pagina in memoria fisica
+-> page offset(d), combinato con l'indirizzo di base definisce l'indirizzo fisico in memoria che è inviato all'unità di memoria
+
+Inoltre, ogni entry della page table ha dei bit caratteristici. In particolare si può far riferimento alla slide 32 del blocco "Chapter 9: Main Memory".
+Per semplificazione, anziché dei bit, usiamo dei campi nella pt_entry. Eccoli:
+Present/Absent:
+Questo campo indica se la pagina virtuale è attualmente presente in memoria fisica o se è assente. Se il bit "present" è impostato, significa che la pagina è stata caricata in memoria fisica e l'indirizzo fisico associato è valido. Se il bit è "absent", potrebbe essere necessario un page fault per caricare la pagina in memoria fisica prima che possa essere accessibile.
+
+Protection:
+Questo campo specifica i permessi di accesso alla pagina. I permessi includono la lettura, la scrittura e l'esecuzione. Ad esempio, una pagina potrebbe essere contrassegnata come "read-only" o "writable". Questo controllo dei permessi consente al sistema operativo di implementare la protezione dei dati e il controllo degli accessi.
+
+Modified:
+Questo campo indica se la pagina è stata modificata da quando è stata caricata in memoria. Viene spesso chiamato "dirty bit". Questo è utile per l'ottimizzazione: quando il sistema operativo deve liberare un frame fisico, può decidere se scrivere la pagina sulla memoria virtuale o semplicemente eliminarla.
+
+Referenced:
+Questo campo indica se la pagina è stata letta o acceduta da quando è stata caricata in memoria. È spesso chiamato "accessed bit". Come il campo "modified", questo bit aiuta nell'ottimizzazione e nella gestione della sostituzione delle pagine.
+
+Caching Disabled:
+Questo campo indica se la cache è disabilitata per la pagina. Questo può essere utilizzato per garantire che i dati specifici non siano mantenuti nella cache, ad esempio quando si accede a periferiche di I/O
+
 La page table si deve occupare della traduzione da indirizzo logico a indirizzo fisico. Dunque, il kernel lavorerà allocando in maniera contigua, mentre a livello user si utilizzerà la paginazione. La pagetable è vista come una struct con all'interno un vettore di pagine fisiche e ALTRO DA DEFINIRE.
 Bisogna definire (VEDERE COME) il numero di pagine della page table. Come fare? NON è uguale a nRamFrames perché non riguarda tutta la ram, compresa la zona kernel, ma solo lo spazio user.
 La logica con cui si accede al corrispondente valore fisico di un indirizzo è il seguente:
-pt_map() -> pongo in ingresso il fisico e il virtuale, dal virtuale dividendo per PAGE_SIZE ottengo l'indice di pagina che sfrutto anche come indice del vettore in cui inserire il corrispondente valore fisico
-pt_translate()-> una volta inseriti i valori fisici, per tradurre un indirizzo virtuale basterà semplicemente ottenere l'indice (sempre dividendo per PAGE_SIZE) e accedere all'i-esima posizione del vettore all'interno della struct pagetable.
-
+pt_map() -> pongo in ingresso il fisico DELLA PAGINA (non di un indirizzo specifico) e il virtuale, dal virtuale dividendo per PAGE_SIZE ottengo l'indice di pagina (il cosiddetto page number) che sfrutto come indice del vettore in cui inserire il corrispondente valore fisico
+pt_translate()-> una volta inseriti i valori fisici, per tradurre un indirizzo virtuale basterà semplicemente ottenere l'indice (sempre dividendo per PAGE_SIZE) e accedere all'i-esima posizione del vettore all'interno della struct pagetable. Questo valore però è l'indirizzo del frame, a cui bisogna aggiungere il displacement per ottenere l'indirizzo fisico specifico corrispondente. Per fare ciò, si utilizza una maschera chiamata DISPLACEMENT_MASK inizializzata a 0xFFF, corrispondente agli ultimi 12 bit. In questo modo, se faccio una OR con l'indirizzo VIRTUALE specifico, ottengo il diplacement specifico. Dunque, facendo una OR di questo displacement appena trovato con l'indirizzo fisico del frame p, ottengo frame+displacement, ossia la traduzione fisica dell'indirizzo virtuale.
 ## SEGMENTI
 L'ELF header e il program header (PHDR) sono entrambi elementi fondamentali dei file ELF (Executable and Linkable Format), ma svolgono ruoli diversi all'interno di un file ELF.
 
@@ -108,3 +129,16 @@ indirizzo virtuale --> TLB look up  -->  NO TLB HIT? -->   [HW sets BADVADDR,rai
 LA vm_fault viene chiamata in mips_trap(..) in 'os161-base-2.0.3/kern/arch/mips/locore/trap.c' che controlla il codice di "eccezione", codici relativi a IRQ e syscall sono gestiti rispettivamente  da mainbus_interrupt() e syscall(), altrimenti chiama la vm_fault per codici relativi a eccezioni TLB, che sono VM_FAULT_READONLY/READ/WRITE
 
 programma per testare la sostituzione nella tlb? (p testbin/huge)
+
+
+La TLB comunica con la page table principalmente nei seguenti casi:
+
+-> TLB Miss: Quando la CPU cerca di accedere a un indirizzo virtuale e non trova la corrispondente traduzione nell'TLB (questo è noto come TLB miss), la CPU deve consultare la page table per ottenere la traduzione corretta dell'indirizzo virtuale in un indirizzo fisico.
+
+-> TLB Invalidation: La TLB deve essere aggiornata o invalidata quando ci sono cambiamenti nel mapping tra indirizzi virtuali e indirizzi fisici. Questo può accadere a seguito di operazioni come la creazione o la terminazione di processi, l'allocazione o la deallocazione di pagine di memoria, o la modifica dei permessi di accesso. In questi casi, la TLB deve essere aggiornata per riflettere gli aggiornamenti nella page table.
+
+-> Context Switch: Quando avviene un cambio di contesto tra due processi, il contenuto della TLB deve essere invalidato o sostituito con le nuove traduzioni della page table del nuovo processo. Questo è necessario perché il mapping tra gli indirizzi virtuali e gli indirizzi fisici è diverso per ciascun processo.
+
+
+
+
