@@ -58,9 +58,11 @@ void pt_map(paddr_t p, vaddr_t v){
 
     spinlock_acquire(&free_pt);
     pt[i]->paddr=p;
+    if(pt[i]->status==ABSENT){
+        pt[i]->status=PRESENT;
+    }
+    pt[i]->protection=PT_E_RW;
     spinlock_release(&free_pt);
-    
-    return 0;
 }
 /* Change this name of the function maybe in pt_get_paddr */
 /* Not sure it is the correct way to obtain the physical address */
@@ -88,6 +90,7 @@ void pt_fault(struct pt_entry* pt_e, uint32_t faulttype){
         // pt_miss(pt_e)?
         // potrebbe essere una funzione che gestisce il caso in cui un frame non è mappato sulla tabella delle pagine
         // cosa può fare? mappare l'indirizzo e restituirlo?
+        
         break;
         default:
         break;
