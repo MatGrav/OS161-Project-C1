@@ -75,6 +75,20 @@ Bisogna definire (VEDERE COME) il numero di pagine della page table. Come fare? 
 La logica con cui si accede al corrispondente valore fisico di un indirizzo è il seguente:
 pt_map() -> pongo in ingresso il fisico DELLA PAGINA (non di un indirizzo specifico) e il virtuale, dal virtuale dividendo per PAGE_SIZE ottengo l'indice di pagina (il cosiddetto page number) che sfrutto come indice del vettore in cui inserire il corrispondente valore fisico
 pt_translate()-> una volta inseriti i valori fisici, per tradurre un indirizzo virtuale basterà semplicemente ottenere l'indice (sempre dividendo per PAGE_SIZE) e accedere all'i-esima posizione del vettore all'interno della struct pagetable. Questo valore però è l'indirizzo del frame, a cui bisogna aggiungere il displacement per ottenere l'indirizzo fisico specifico corrispondente. Per fare ciò, si utilizza una maschera chiamata DISPLACEMENT_MASK inizializzata a 0xFFF, corrispondente agli ultimi 12 bit. In questo modo, se faccio una OR con l'indirizzo VIRTUALE specifico, ottengo il diplacement specifico. Dunque, facendo una OR di questo displacement appena trovato con l'indirizzo fisico del frame p, ottengo frame+displacement, ossia la traduzione fisica dell'indirizzo virtuale.
+
+Poiché la paginazione riguarda, nel nostro caso, solo lo spazio user che è diviso in segmenti, allora l'unità elementare che bisogna allocare è un singolo segmento, che può essere distribuito anche su più pagine.
+Dunque, c'è bisogno di una funzione in segment.c (vedi avanti) oppure dove è definita la load_elf che chiama una funzione nella page table per l'allocazione.
+Ricordiamoci che l'allocazione effettiva la fa la VOP_READ
+In particolare, poiché noi stiamo ancora usando la load_segment (volendo potremmo implementare una nuova funzione), il flow è il seguente per l'allocazione utente:
+
+load_elf -> load_segment -> pt_map() -> VOP_READ
+(quindi questo per l'aggiornamento della pt)
+
+Quando invece chiamiamo la pt_translate per avere una traduzione di un indirizzo virtuale e NON c'è una corrispondenza, allora significa che il frame fisico richiesto NON è stato ancora caricato in memoria. Bisogna prima quindi creare uno spazio con as_create, poi chiamare la load_segment per caricare l'effettivo segmento in memoria attingendo dal file elf e aggiornare la tabella delle pagine (e la TLB).
+!!!!!! In questo modo, stiamo nella pratica implementando l'on-demand page loading!
+
+La page table contiene tutti gli indirizzi fisici degli indirizzi virtuali MAPPATI. Un indirizzo virtuale inoltre può essere non mappato in memoria, magari perché la pagina a cui appartiene è stata espulsa.
+
 ## SEGMENTI
 L'ELF header e il program header (PHDR) sono entrambi elementi fondamentali dei file ELF (Executable and Linkable Format), ma svolgono ruoli diversi all'interno di un file ELF.
 
