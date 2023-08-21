@@ -87,7 +87,9 @@ load_elf -> load_segment -> pt_map() -> VOP_READ
 Quando invece chiamiamo la pt_translate per avere una traduzione di un indirizzo virtuale e NON c'è una corrispondenza, allora significa che il frame fisico richiesto NON è stato ancora caricato in memoria. Bisogna prima quindi creare uno spazio con as_create, poi chiamare la load_segment per caricare l'effettivo segmento in memoria attingendo dal file elf e aggiornare la tabella delle pagine (e la TLB).
 !!!!!! In questo modo, stiamo nella pratica implementando l'on-demand page loading!
 
-La page table contiene tutti gli indirizzi fisici degli indirizzi virtuali MAPPATI. Un indirizzo virtuale inoltre può essere non mappato in memoria, magari perché la pagina a cui appartiene è stata espulsa.
+### Algoritmi di sostituzione delle pagine
+La page table contiene tutti gli indirizzi fisici degli indirizzi virtuali MAPPATI. Un indirizzo virtuale inoltre può essere non mappato in memoria, per i motivi scritti in seguito.
+Se la page table teoricamente riesce a coprire qualsiasi traduzione logico-fisica degli indirizzi, allora a cosa servono gli algoritmi di sostituzione delle pagine? Servono per la MEMORIA FISICA, che è limitata e non può contenere tutti i frame possibili di un processo. Dunque, riguardano il caso in cui la memoria virtuale di un processo è superiore a quella fisica. Ogni frame in memoria fisica ha una sua mappatura in page table, dunque non appena un frame viene rimosso o aggiunto, bisogna correttamente aggiornare anche la tabella delle pagine.
 
 ## SEGMENTI
 L'ELF header e il program header (PHDR) sono entrambi elementi fondamentali dei file ELF (Executable and Linkable Format), ma svolgono ruoli diversi all'interno di un file ELF.
