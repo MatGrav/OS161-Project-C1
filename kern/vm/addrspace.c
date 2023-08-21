@@ -182,7 +182,8 @@ as_deactivate(void)
  */
 int
 as_define_region(struct addrspace *as, vaddr_t vaddr, size_t memsize,
-		 int readable, int writeable, int executable)
+		 int readable, int writeable, int executable, struct vnode *v,
+		 uint32_t filesize)
 {
 	size_t npages;
 
@@ -202,10 +203,10 @@ as_define_region(struct addrspace *as, vaddr_t vaddr, size_t memsize,
 		as->code->as= as;
 		as->code->memsize=memsize;
 		as->code->npage=npages;
-		//as->code->permission
-		//as->code->file_elf
-		//as->code->filesize
-		//as->code->offset
+		as->code->permission=S_RW;
+		as->code->file_elf=v;
+		as->code->filesize=filesize;
+		as->code->offset=offset;
 		return 0;
 	}
 
@@ -214,10 +215,10 @@ as_define_region(struct addrspace *as, vaddr_t vaddr, size_t memsize,
 		as->data->as=as;
 		as->data->memsize=memsize;
 		as->data->npage=npages;
-		//as->code->permission
-		//as->code->file_elf
-		//as->code->filesize
-		//as->code->offset
+		as->code->permission=S_RW;
+		as->code->file_elf=v;
+		as->code->filesize=filesize;
+		as->code->offset=offset;
 		return 0;
 	}
 
@@ -230,10 +231,10 @@ as_define_region(struct addrspace *as, vaddr_t vaddr, size_t memsize,
 		as->stack->as=as;
 		as->stack->memsize=memsize;
 		as->stack->npage=npages;
-		//as->stack->permission
-		//as->stack->file_elf
-		//as->stack->filesize
-		//as->stack->offset
+		as->stack->permission=S_RW;
+		as->stack->file_elf=v;
+		as->stack->filesize=filsize;
+		as->stack->offset=offset;
 		return 0;
 	}
 	*/

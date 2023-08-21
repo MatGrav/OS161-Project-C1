@@ -100,12 +100,18 @@ void coremap_init(){
   cmap->np_sz = nRamFrames-firstpaddr/PAGE_SIZE;
   cmap->np_capacity = nRamFrames-firstpaddr/PAGE_SIZE;
 
-
   spinlock_acquire(&coremap_lock);
   coremapActive = 1;
   spinlock_release(&coremap_lock);    
 }
 
+unsigned long get_np_sz(){
+  spinlock_acquire(&coremap_lock);
+  unsigned long sz = cmap->np_sz;
+  spinlock_release(&coremap_lock);
+
+  return sz;
+}
 
 /* Should never be called?*/
 void coremap_cleanup(){

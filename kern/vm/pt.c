@@ -21,6 +21,24 @@ struct spinlock free_pt = SPINLOCK_INITIALIZER;
 /* Page Table */
 struct pt_entry pt[PT_SIZE];
 
+/* Queue for FIFO support */
+static unsigned int queue_fifo[PT_SIZE];
+static unsigned int queue_front = 0;
+static unsigned int queue_rear = 0;
+
+static unsigned int pt_fifo() {
+    KASSERT(queue_front != queue_rear);
+
+    /* Pop on queue_fifo */
+    unsigned int old = queue_fifo[queue_front];
+    // TO DO: write on swapfile -> call a function in swapfile.c
+    pt_free(queue_front);
+    queue_front = (queue_front + 1) % PT_SIZE;
+    
+    return old;
+}
+
+
 void pt_init(){
     int i;
     pt = kmalloc(sizeof(struct pt_entry)*PT_SIZE);
@@ -40,6 +58,12 @@ void pt_clean_up(){
     }
 }
 
+void pt_free(unsigned int i){
+    pt[i]->paddr=0;
+    pt[i]->status=ABSENT;
+    pt[i]->protection=PT_E_RW;
+}
+
 void pt_destroy(){
     kfree(pt);
 }
@@ -50,6 +74,8 @@ void pt_destroy(){
 /* I obtain the page number dividing by PAGE_SIZE; I obtain the frame number from the page table */
 void pt_map(paddr_t p, vaddr_t v){
     
+    //TO DO allineamento p + KASSERT
+
     /* PAGE NUMBER */
     unsigned int i = (unsigned int) v/PAGE_SIZE;
     if(i>PT_SIZE){
@@ -62,35 +88,27 @@ void pt_map(paddr_t p, vaddr_t v){
         pt[i]->status=PRESENT;
     }
     pt[i]->protection=PT_E_RW;
+    
+    /* Push on queue_fifo */
+    queue[queue_rear] = i; /* we write the index of page table */
+    queue_rear = (queue_rear + 1) % PT_SIZE;  /* update of rear */
     spinlock_release(&free_pt);
-}
-/* Change this name of the function maybe in pt_get_paddr */
-/* Not sure it is the correct way to obtain the physical address */
-/* Secondo me è totalmente errata percjé sennò non avrebbe senso
-di esistere una page table, basterebbe fare una sottrazione.
-Poi non considera che un indirizzo virtuale (pagina) può essere in
-comune a più indirizzi fisici (frame) */
-paddr_t pt_get_page(vaddr_t v){
-    /*
-    paddr_t res;
-
-    res=v-MIPS_KSEG0;
-
-    res &= ~PAGE_SIZE;
-
-    return res;
-    */
 }
 
 void pt_fault(struct pt_entry* pt_e, uint32_t faulttype){
+    unsigned int i;
     switch(faulttype){
         case INVALID_MAP:
         panic("Invalid input address for paging\n");
         case NOT_MAPPED:
-        // pt_miss(pt_e)?
-        // potrebbe essere una funzione che gestisce il caso in cui un frame non è mappato sulla tabella delle pagine
-        // cosa può fare? mappare l'indirizzo e restituirlo?
-        
+        /* Wr're trying to access to a not mapped page */
+        /* Let's update it in memory*/
+        paddr_t p = getppages(1);
+
+        if(p==0){
+            i = pt_fifo();
+            pt_map(pt[i]->paddr, PAGE_SIZE*i /* =vaddr*/);
+        }
         break;
         default:
         break;
@@ -108,17 +126,17 @@ paddr_t pt_translate(vaddr_t v){
     spinlock_acquire(&free_pt);
     /* frame number */
     p = pt[i]->paddr;
+    spinlock_release(&free_pt);
+
     if(pt[i]->status == ABSENT){
         /* There's not a corresponding frame */
-        /* return ?*/
-        /* here, we choose to map*/
         pt_fault(pt[i], NOT_MAPPED);
-        //p=pt_get_page(v);
-        //pt_map(p, v);
+        spinlock_acquire(&free_pt);
+        p=pt[i]->paddr;
+        spinlock_release(&free_pt);
     }
     /* physical address to return */
     p |= (v & DISPLACEMENT_MASK);
-    spinlock_release(&free_pt);
 
     return p;
 }

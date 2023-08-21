@@ -37,6 +37,7 @@ void coremap_init(void);
 
 unsigned int get_nRamFrames(void);
 void coremap_cleanup(void);
+unsigned long get_np_sz(void);
 
 /* Contiguous allocation and deallocation used by kernel*/
 vaddr_t alloc_kpages(unsigned);
