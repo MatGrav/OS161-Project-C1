@@ -85,7 +85,17 @@ kill_curthread(vaddr_t epc, unsigned code, vaddr_t vaddr)
 		KASSERT(0);
 		sig = SIGABRT;
 		break;
-	    case EX_MOD:
+		case EX_MOD:
+		{
+			#if OPT_NOVAVM
+				kprintf("Killing the process that caused this\n");
+				sys__exit(-1);
+				return;
+				break;
+			else
+				/* Default "implementation" */
+			#endif
+		}
 	    case EX_TLBL:
 	    case EX_TLBS:
 		sig = SIGSEGV;

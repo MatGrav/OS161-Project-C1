@@ -52,33 +52,18 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	switch (faulttype) {
 		// TO DO
 	    case VM_FAULT_READONLY:
+		{
+			/*Kernel should terminate the process that attempted to modify.*/
 
-			/* TO DO:
-
-			In the dumbvm system, all three address-space segments (text, data, and stack) are both
-			readable and writable by the application. For this assignment, you should change this so
-			that each application’s text segment is read-only. Your kernel should set up TLB entries so
-			that any attempt by an application to modify its text section will cause the MIPS MMU togenerate a
-			read-only memory exception (VM_FAULT_READONLY). 
-			If such an exception occurs, your kernel should terminate the process that attempted to modify its text segment.
-			Your kernel should not crash.*/
-
-			//
-			// if (/* tua condizione per terminare il processo */) {
-        	// Ottieni il processo corrente
-        	//struct proc *current_proc = curproc;
-
-        	// Invia un segnale di terminazione al processo corrente
-        	//proc_kill(current_proc, SIGKILL);
-
-			
-			/* We always create pages read-write, so we can't get this */
-			panic("dumbvm: got VM_FAULT_READONLY\n");
+			/* If vm_fault() != 0 (EACCES = 10 in errno.h), the mips_trap function that called it decides to "Kill the current user process"
+			by calling the kill_curthread */
+			return EACCES;
+		}
 	    case VM_FAULT_READ:
-			/*Should do something?*/
+			/* Handled by the following code (request to the page table)*/
 			break;
 	    case VM_FAULT_WRITE:
-			/*Should do something?*/
+			/* Handled by the following code (request to the page table)*/
 			break;
 	    default:
 			return EINVAL;
@@ -108,8 +93,7 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	 |
 	 |
 	 v
-	
-	I think we should change addrspace to have pointers to segments */
+	 */
 	KASSERT(as->code  != NULL);
 	KASSERT(as->data  != NULL);
 	KASSERT(as->stack != NULL);
@@ -119,7 +103,7 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	KASSERT((as->stack->vaddr & PAGE_FRAME) == as->data->vaddr);
 
 	//TO DO:
-	// paddr = pt_get_page? (faultaddress)
+	paddr = pt_translate(faultaddress & PAGE_FRAME);
 
 	if(paddr == 0){
 		return EFAULT;
