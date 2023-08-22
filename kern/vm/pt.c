@@ -141,3 +141,11 @@ paddr_t pt_translate(vaddr_t v){
     return p;
 }
 
+void pt_swap_push(struct pt_entry* pt_e){
+    swap_in(pt_e->paddr);
+}
+
+struct pt_entry pt_swap_pop(struct pt_entry* pt_e){
+    struct pt_entry res;
+    res=swap_out(pt_e);
+}
