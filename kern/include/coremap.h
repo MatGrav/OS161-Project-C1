@@ -43,4 +43,7 @@ unsigned long get_np_sz(void);
 vaddr_t alloc_kpages(unsigned);
 void free_kpages(vaddr_t);
 
+// TO DO: Write this function
+vaddr_t alloc_upage(void);
+
 #endif /* _COREMAP_H_ */

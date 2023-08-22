@@ -355,6 +355,7 @@ optfile novavm vm/pt.c
 optfile novavm vm/segment.c
 optfile novavm vm/vm_tlb.c
 optfile novavm vm/vmstats.c
+optfile novavm vm/swapfile.c
 
 optofffile dumbvm   vm/addrspace.c
 #optfile novavm arch/mips/vm/novavm.c

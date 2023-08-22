@@ -265,3 +265,9 @@ void free_kpages(vaddr_t addr){
     freeppages(paddr, npages);	
   }
 }
+
+/* TO DO: write it */
+vaddr_t
+alloc_upage(){
+  return 0;
+}

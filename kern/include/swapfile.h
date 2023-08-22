@@ -6,7 +6,7 @@
 struct swapfile_entry{
     paddr_t paddr;
     size_t index;
-}
+};
 
 void swap_init(void);
 void swap_clean_up(void);

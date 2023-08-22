@@ -10,17 +10,24 @@
 #include <addrspace.h>
 #include <vm.h>*/
 
-#include "pt.h"
+#include <types.h>
 #include <lib.h>
 #include <vm.h>
 #include <coremap.h>
 #include <spinlock.h>
-#include <types.h>
+#include <swapfile.h>
+
+#include "pt.h"
+
+
+
 
 struct spinlock free_pt = SPINLOCK_INITIALIZER;
 
 /* Page Table */
-struct pt_entry pt[PT_SIZE];
+// TO DO: check 
+//struct pt_entry pt[PT_SIZE];
+struct pt_entry* pt = NULL;
 
 /* Queue for FIFO support */
 static unsigned int queue_fifo[PT_SIZE];
@@ -41,8 +48,7 @@ static unsigned int pt_fifo() {
 
 
 void pt_init(){
-    int i;
-    pt = kmalloc(sizeof(struct pt_entry)*PT_SIZE);
+    pt = (struct pt_entry*) kmalloc(sizeof(struct pt_entry)*PT_SIZE);
     if (pt==NULL){
         return;
     }
@@ -52,17 +58,18 @@ void pt_init(){
 
 /* L'ho scritto in una funzione a parte perché potrebbe tornarci utile per azzerare la pt*/
 void pt_clean_up(){
+    int i;
     for (i=0; i<PT_SIZE; i++){
-        pt[i]->paddr=0;
-        pt[i]->status=ABSENT;
-        pt[i]->protection=PT_E_RW;
+        pt[i].paddr=0;
+        pt[i].status=ABSENT;
+        pt[i].protection=PT_E_RW;
     }
 }
 
 void pt_free(unsigned int i){
-    pt[i]->paddr=0;
-    pt[i]->status=ABSENT;
-    pt[i]->protection=PT_E_RW;
+    pt[i].paddr=0;
+    pt[i].status=ABSENT;
+    pt[i].protection=PT_E_RW;
 }
 
 void pt_destroy(){
@@ -84,31 +91,42 @@ void pt_map(paddr_t p, vaddr_t v){
     }
 
     spinlock_acquire(&free_pt);
-    pt[i]->paddr=p;
-    if(pt[i]->status==ABSENT){
-        pt[i]->status=PRESENT;
+    pt[i].paddr=p;
+    if(pt[i].status==ABSENT){
+        pt[i].status=PRESENT;
     }
-    pt[i]->protection=PT_E_RW;
+    pt[i].protection=PT_E_RW;
     
     /* Push on queue_fifo */
-    queue[queue_rear] = i; /* we write the index of page table */
+    // TO DO: i comment the following line, but where is queue supposed to be declared
+    //queue[queue_rear] = i; /* we write the index of page table */
     queue_rear = (queue_rear + 1) % PT_SIZE;  /* update of rear */
     spinlock_release(&free_pt);
 }
 
 void pt_fault(struct pt_entry* pt_e, uint32_t faulttype){
     unsigned int i;
+    (void)pt_e;
     switch(faulttype){
         case INVALID_MAP:
         panic("Invalid input address for paging\n");
         case NOT_MAPPED:
+        {
         /* Wr're trying to access to a not mapped page */
         /* Let's update it in memory*/
-        paddr_t p = getppages(1);
+        
+        // TO DO: I changed this line?
+        //paddr_t p = getppages(1);
 
-        if(p==0){
-            i = pt_fifo();
-            pt_map(pt[i]->paddr, PAGE_SIZE*i /* =vaddr*/);
+        /*Also, where is pt_e supposed to be used ?*/
+        //see before the switch
+
+            paddr_t p = alloc_upage();
+
+            if(p==0){
+                i = pt_fifo();
+                pt_map(pt[i].paddr, PAGE_SIZE*i /* =vaddr*/);
+            }
         }
         break;
         default:
@@ -126,14 +144,14 @@ paddr_t pt_translate(vaddr_t v){
     
     spinlock_acquire(&free_pt);
     /* frame number */
-    p = pt[i]->paddr;
+    p = pt[i].paddr;
     spinlock_release(&free_pt);
 
-    if(pt[i]->status == ABSENT){
+    if(pt[i].status == ABSENT){
         /* There's not a corresponding frame */
-        pt_fault(pt[i], NOT_MAPPED);
+        pt_fault(&pt[i], NOT_MAPPED);
         spinlock_acquire(&free_pt);
-        p=pt[i]->paddr;
+        p=pt[i].paddr;
         spinlock_release(&free_pt);
     }
     /* physical address to return */
@@ -148,5 +166,9 @@ void pt_swap_push(struct pt_entry* pt_e){
 
 struct pt_entry pt_swap_pop(struct pt_entry* pt_e){
     struct pt_entry res;
-    res=swap_out(pt_e);
+    // TO DO: same thing
+    //res=swap_out(pt_e);
+    swap_out(pt_e->paddr);
+
+    return res;
 }
