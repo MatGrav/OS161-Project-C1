@@ -142,7 +142,10 @@ In os161 è già presente una TLB con 64 entries (kern/arch/mips/include/tlb.h).
 
 indirizzo virtuale --> TLB look up  -->  NO TLB HIT? -->   [HW sets BADVADDR,raises exception; OS161 sees VM_FAULT_READ or VM_FAULT_WRITE ] ==> gestiamo la vm_fault all'interno della quale chiediamo alla tabella delle pagine l'indirizzo fisico così da aggiungere/sostituire una entry nella TLB
 
-LA vm_fault viene chiamata in mips_trap(..) in 'os161-base-2.0.3/kern/arch/mips/locore/trap.c' che controlla il codice di "eccezione", codici relativi a IRQ e syscall sono gestiti rispettivamente  da mainbus_interrupt() e syscall(), altrimenti chiama la vm_fault per codici relativi a eccezioni TLB, che sono VM_FAULT_READONLY/READ/WRITE
+LA vm_fault viene chiamata in mips_trap(..) in 'os161-base-2.0.3/kern/arch/mips/locore/trap.c' che controlla il codice di "eccezione", codici relativi a IRQ e syscall sono gestiti rispettivamente  da mainbus_interrupt() e syscall(), altrimenti chiama la vm_fault per codici relativi a eccezioni TLB, che sono VM_FAULT_READONLY/READ/WRITE.
+ 
+Nel caso VM_FAULT_READONLY.Il progetto prevede che non si possa scrivere sul segmento di testo, pertanto è possibile che si arrivi a questo codice, che ha il compito di uccidere il processo user corrente. Se la vm_fault ritorna EACCES (definito in kern/errno per permission denied), ritorneremo alla mips_trap() che arriverà alla chiamata a kill_curthread(..)  che avrà l'obiettivo di uccidere il processo user corrente. Pertanto modifichiamo quest'ultima mettendo una sys__exit nel caso EX_MOD.
+Nei casi di VM_FAULT READ e WRITE, la vm_fault() prosegue normalmente, come in dumbvm, ma chiede il paddr alla page table, la quale si occuperà di gestire l'eventuale assenza in RAM di quanto richiesto (?).
 
 programma per testare la sostituzione nella tlb? (p testbin/huge)
 
