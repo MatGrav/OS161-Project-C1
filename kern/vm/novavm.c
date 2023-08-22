@@ -15,11 +15,13 @@
 #include <pt.h>
 #include <segment.h>
 #include <vm_tlb.h>
+#include <vmstats.h>
 
 /* Initialization function */
 void vm_bootstrap(void){
 	coremap_init();
 	//pt_init();
+	vmstats_init();
 }
 
 void
@@ -103,7 +105,7 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	KASSERT((as->stack->vaddr & PAGE_FRAME) == as->data->vaddr);
 
 	//TO DO:
-	paddr = pt_translate(faultaddress & PAGE_FRAME);
+	paddr = pt_translate(faultaddress);
 
 	if(paddr == 0){
 		return EFAULT;
@@ -164,10 +166,12 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 
 /* TLB shootdown handling called from interprocessor_interrupt */
 void vm_tlbshootdown(const struct tlbshootdown *ts){
-    
 	(void)ts;
 
 }
 
+void vm_shutdown(){
 
+	vmstats_print();
+}
 

@@ -40,6 +40,8 @@
 #include <mainbus.h>
 #include <syscall.h>
 
+#include "opt-novavm.h"
+
 
 /* in exception-*.S */
 extern __DEAD void asm_usermode(struct trapframe *tf);
@@ -92,7 +94,7 @@ kill_curthread(vaddr_t epc, unsigned code, vaddr_t vaddr)
 				sys__exit(-1);
 				return;
 				break;
-			else
+			#else
 				/* Default "implementation" */
 			#endif
 		}

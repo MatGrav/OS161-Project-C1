@@ -23,6 +23,8 @@ void novavm_can_sleep(void);
 /* TLB shootdown handling called from interprocessor_interrupt */
 //void vm_tlbshootdown(const struct tlbshootdown *);
 
+/* Calls the print_stats function */
+void vm_shutdown(void);
 
 
 #endif
