@@ -1,6 +1,7 @@
 #include "vmstats.h"
 #include <types.h>
 #include <spinlock.h>
+#include <lib.h>
 
 
 static uint32_t vmstats[NUM_OF_STATS];
@@ -28,29 +29,38 @@ void vmstats_init(){
 
 void vmstats_print(){
 
-    kprintf("Printing vm stats:\n");
+    /* This functions is meant to be called during vm_shutdown, 
+    however is written "correctly" at any time (I/O is expensive, so we shorten critical section) */
+    spinlock_acquire(&vmstats_lock);
+    uint32_t curstats[NUM_OF_STATS];
+    for(int i=0;i<NUM_OF_STATS;i++){
+        curstats[i] = vmstats[i];
+    }
+    spinlock_release(&vmstats_lock);
 
-    if(vmstats[TLB_FAULTS] != (vmstats[TLB_FAULTS_FREE] + vmstats[TLB_FAULTS_REPLACE])){
+
+    kprintf("Printing vm stats:\n");
+    if(curstats[TLB_FAULTS] != (curstats[TLB_FAULTS_FREE] + curstats[TLB_FAULTS_REPLACE])){
         kprintf("[WARNING: TLB_FAULTS is not equal to TLB_FAULT_FREE + TLB_FAULTS_REPLACE]\n");
     };
-    kprintf("TLB Faults: %u\n",vmstats[TLB_FAULTS]);
-    kprintf("TLB Faults with Free: %u\n",vmstats[TLB_FAULTS_FREE]);
-    kprintf("TLB Faults with Replace: %u\n",vmstats[TLB_FAULTS_REPLACE]);
+    kprintf("TLB Faults: %u\n",curstats[TLB_FAULTS]);
+    kprintf("TLB Faults with Free: %u\n",curstats[TLB_FAULTS_FREE]);
+    kprintf("TLB Faults with Replace: %u\n",curstats[TLB_FAULTS_REPLACE]);
 
-    kprintf("TLB Invalidations: %u\n",vmstats[TLB_INVALIDATIONS]);
-    kprintf("TLB Reloads: %u\n",vmstats[TLB_RELOADS]);
+    kprintf("TLB Invalidations: %u\n",curstats[TLB_INVALIDATIONS]);
+    kprintf("TLB Reloads: %u\n",curstats[TLB_RELOADS]);
 
-    if(vmstats[TLB_FAULTS] != (vmstats[TLB_RELOADS] + vmstats[PAGE_FAULTS_DISK] + vmstats[PAGE_FAULTS_ZEROED])){
+    if(curstats[TLB_FAULTS] != (curstats[TLB_RELOADS] + curstats[PAGE_FAULTS_DISK] + curstats[PAGE_FAULTS_ZEROED])){
         kprintf("\n[WARNING: TLB Fault is not equal to TLB Reloads + PageFaults (Disk) + PageFaults(Zeroed)]\n");
     };
 
-    kprintf("Page Faults (Zeroed): %u\n",vmstats[PAGE_FAULTS_ZEROED]);
-    kprintf("Page Faults (Disk): %u\n",vmstats[PAGE_FAULTS_DISK]);
-    kprintf("Page Faults from ELF: %u\n",vmstats[PAGE_FAULTS_ELF]);
-    kprintf("Page Faults from Swapfile: %u\n",vmstats[PAGE_FAULTS_SWAPFILE]);
-    kprintf("Swapfile Writes: %u\n",vmstats[SWAPFILE_WRITES]);
+    kprintf("Page Faults (Zeroed): %u\n",curstats[PAGE_FAULTS_ZEROED]);
+    kprintf("Page Faults (Disk): %u\n",curstats[PAGE_FAULTS_DISK]);
+    kprintf("Page Faults from ELF: %u\n",curstats[PAGE_FAULTS_ELF]);
+    kprintf("Page Faults from Swapfile: %u\n",curstats[PAGE_FAULTS_SWAPFILE]);
+    kprintf("Swapfile Writes: %u\n",curstats[SWAPFILE_WRITES]);
 
-    if(vmstats[TLB_FAULTS] != (vmstats[PAGE_FAULTS_DISK] + vmstats[PAGE_FAULTS_SWAPFILE] + vmstats[PAGE_FAULTS_ELF])){
+    if(curstats[TLB_FAULTS] != (curstats[PAGE_FAULTS_DISK] + curstats[PAGE_FAULTS_SWAPFILE] + curstats[PAGE_FAULTS_ELF])){
         kprintf("\n[WARNING: Page Faults (Disk) is not equal to Page Faults from Swapfile + Page Faults from ELF]\n");
     };
 }
@@ -60,13 +70,29 @@ int vmstats_increase(unsigned int stat){
     if(stat >= NUM_OF_STATS){
         return E_STATS_OVER;
     }
-    
     if(isVmstatsActive() == 0){
         return E_STATS_INACTIVE;
     }
 
     spinlock_acquire(&vmstats_lock);
     vmstats[stat] += 1;
+    spinlock_release(&vmstats_lock);
+    return 0;
+}
+
+
+int vmstats_increase_2(unsigned int stat1, unsigned int stat2){
+
+    if(stat1 >= NUM_OF_STATS || stat2 >= NUM_OF_STATS){
+        return E_STATS_OVER;
+    }
+    if(isVmstatsActive() == 0){
+        return E_STATS_INACTIVE;
+    }
+
+    spinlock_acquire(&vmstats_lock);
+    vmstats[stat1] += 1;
+    vmstats[stat2] += 1;
     spinlock_release(&vmstats_lock);
     return 0;
 }

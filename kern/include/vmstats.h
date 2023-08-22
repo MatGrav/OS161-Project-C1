@@ -57,4 +57,8 @@ void vmstats_print(void);
 
 int vmstats_increase(unsigned int stat);
 
+/* "Optimized" function to increase two linked stats, e.g., tlb faults and tlb faults with free*/
+/* (Simply allows us to avoid useless spinlock release and acquire, unique critical section) */
+int vmstats_increase_2(unsigned int stat1,unsigned int stat2);
+
 #endif

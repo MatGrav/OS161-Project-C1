@@ -37,6 +37,7 @@
 
 #include <vm.h>
 #include "opt-dumbvm.h"
+#include "opt-novavm.h"
 
 // #include <segment.h>
 
@@ -59,7 +60,7 @@ struct addrspace {
         paddr_t as_pbase2;
         size_t as_npages2;
         paddr_t as_stackpbase;
-#else
+#elif OPT_NOVAVM
         //struct segment code;
         //struct segment data;
         //struct segment stack;
@@ -67,7 +68,9 @@ struct addrspace {
         
         struct segment* code;
         struct segment* data;
-        struct segment* stack;         
+        struct segment* stack;  
+#else
+        
 #endif
 };
 
@@ -117,7 +120,13 @@ int               as_copy(struct addrspace *src, struct addrspace **ret);
 void              as_activate(void);
 void              as_deactivate(void);
 void              as_destroy(struct addrspace *);
-
+#if OPT_DUMBVM
+int               as_define_region(struct addrspace *as,
+                                   vaddr_t vaddr, size_t sz,
+                                   int readable,
+                                   int writeable,
+                                   int executable);
+#elif OPT_NOVAVM
 int               as_define_region(struct addrspace *as,
                                    vaddr_t vaddr, size_t sz,
                                    int readable,
@@ -126,6 +135,7 @@ int               as_define_region(struct addrspace *as,
                                    struct vnode* v,
                                    uint32_t filesize,
                                    uint32_t offset);
+#endif
 int               as_prepare_load(struct addrspace *as);
 int               as_complete_load(struct addrspace *as);
 int               as_define_stack(struct addrspace *as, vaddr_t *initstackptr);

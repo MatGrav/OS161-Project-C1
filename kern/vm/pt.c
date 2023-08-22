@@ -15,6 +15,7 @@
 #include <vm.h>
 #include <coremap.h>
 #include <spinlock.h>
+#include <types.h>
 
 struct spinlock free_pt = SPINLOCK_INITIALIZER;
 

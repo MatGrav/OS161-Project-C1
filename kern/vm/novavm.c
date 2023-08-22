@@ -153,6 +153,7 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 		elo = paddr | TLBLO_DIRTY | TLBLO_VALID;
 		DEBUG(DB_VM, "novavm: 0x%x -> 0x%x\n", faultaddress, paddr);
 		tlb_write(ehi, elo, i);
+		vmstats_increase_2(TLB_FAULTS,TLB_FAULTS_FREE);
 		splx(spl);
 		return 0;
 	}
@@ -160,6 +161,7 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	/* At this point dumbvm, running out of entries, couldn't handle pf
 	returning EFAULT*/
 	tlb_write(ehi,elo,tlb_get_rr_victim());
+	vmstats_increase_2(TLB_FAULTS,TLB_FAULTS_REPLACE);
 	splx(spl);
 	return 0;
 }

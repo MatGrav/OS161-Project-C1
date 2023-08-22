@@ -38,6 +38,7 @@
 #include <novavm.h>
 #include <coremap.h>
 #include <pt.h>
+#include <vmstats.h>
 
 #include <spl.h>
 
@@ -156,7 +157,7 @@ as_activate(void)
 	for (i=0; i<NUM_TLB; i++) {
 		tlb_write(TLBHI_INVALID(i), TLBLO_INVALID(), i);
 	}
-
+	vmstats_increase(TLB_INVALIDATIONS);
 	splx(spl);
 }
 
@@ -183,7 +184,7 @@ as_deactivate(void)
 int
 as_define_region(struct addrspace *as, vaddr_t vaddr, size_t memsize,
 		 int readable, int writeable, int executable, struct vnode *v,
-		 uint32_t filesize)
+		 uint32_t filesize, uint32_t offset)
 {
 	size_t npages;
 
