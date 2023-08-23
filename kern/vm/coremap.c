@@ -127,6 +127,11 @@ void coremap_cleanup(){
 
 static void rem_head(){
     if (cmap->np_sz > 0) {
+        /*
+        if(cmap->entry[np_head]->status==FREE){
+          cmap->entry[np_head]->status=OCCUPIED;
+        }
+        */
         cmap->np_head = (cmap->np_head + 1) % cmap->np_capacity;
         cmap->np_sz--;
     }
@@ -267,7 +272,16 @@ void free_kpages(vaddr_t addr){
 }
 
 /* TO DO: write it */
-vaddr_t
-alloc_upage(){
-  return 0;
+paddr_t
+alloc_upage(unsigned npages){
+
+  paddr_t pa;
+
+	novavm_can_sleep(); //?
+	pa = getppages(npages);
+	if (pa==0) {
+		return 0;
+	}
+	
+  return pa;
 }

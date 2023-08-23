@@ -10,26 +10,44 @@
 #include <kern/fcntl.h>
 #include <uio.h>
 #include <vnode.h>
+#include <spinlock.h>
 
 
 static struct vnode* swapfile = NULL;
-//static size_t index = 0; why was this defined?
+static unsigned int* bitmap = NULL; 
+static struct spinlock swap_free = SPINLOCK_INITIALIZER;
 
 
 void swap_init(){
-    int result;
+    int result, i;
     char sf_name[] = "swapfile.txt"; // Nome del file di swap
 
     result = vfs_open(sf_name, O_RDWR | O_CREAT, 0664, &swapfile);
+    // if result != 0 -> true condition, ok -> reading the body
+    // if result == 0 -> false condition -> not reading the body
     if (result) {
         panic("swapfile_init: vfs_open failed\n");
     }
 
+    result = VOP_TRUNCATE(swapfile, SWAPFILE_SIZE);
+    if (result) {
+        panic("swapfile_init: VOP_TRUNCATE unable to set swapfile size\n");
+    }
+
+    bitmap = kmalloc(sizeof(unsigned int) * SWAPFILE_SIZE/PAGE_SIZE);
+    if(bitmap == NULL){
+        perror("swap_init: unable to allocate bitmap\n");
+        return;
+    }
+    for(i=0; i<SWAPFILE_SIZE/PAGE_SIZE; i++){
+        bitmap[i]=SF_ABSENT;
+    }
 }
 
 void swap_clean_up(){
     KASSERT(swapfile!=NULL);
 
+    kfree(bitmap);
     vfs_close(swapfile);
 }
 
@@ -53,11 +71,16 @@ void swap_in(paddr_t paddr){
     ku.uio_segflg = UIO_USERSPACE;
     ku.uio_rw = UIO_WRITE;
     ku.uio_space = NULL;
-    
-    
-    // TO DO: where does this swapfile_vnode come from ?
-    //VOP_WRITE(swapfile_vnode, &ku);
+
     (void)ku; //temp fix
+    
+    spinlock_acquire(&swap_free);
+    VOP_WRITE(swapfile, &ku);
+    if(bitmap[index]==SF_ABSENT){
+        bitmap[index]=SF_PRESENT;
+    }
+    spinlock_release(&swap_free);
+    
 }
 
 paddr_t swap_out(paddr_t paddr){
@@ -80,7 +103,14 @@ paddr_t swap_out(paddr_t paddr){
     ku.uio_rw = UIO_READ;
     ku.uio_space = NULL;
 
-    VOP_READ(swapfile, &ku);
+
+    spinlock_acquire(&swap_free);
+    if(bitmap[index]==SF_PRESENT) {
+        VOP_READ(swapfile, &ku);
+    } else {
+        return -1;
+    }
+    spinlock_release(&swap_free);
 
     return paddr;
 

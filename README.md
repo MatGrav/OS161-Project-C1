@@ -91,6 +91,36 @@ Quando invece chiamiamo la pt_translate per avere una traduzione di un indirizzo
 La page table contiene tutti gli indirizzi fisici degli indirizzi virtuali MAPPATI. Un indirizzo virtuale inoltre può essere non mappato in memoria, per i motivi scritti in seguito.
 Se la page table teoricamente riesce a coprire qualsiasi traduzione logico-fisica degli indirizzi, allora a cosa servono gli algoritmi di sostituzione delle pagine? Servono per la MEMORIA FISICA, che è limitata e non può contenere tutti i frame possibili di un processo. Dunque, riguardano il caso in cui la memoria virtuale di un processo è superiore a quella fisica. Ogni frame in memoria fisica ha una sua mappatura in page table, dunque non appena un frame viene rimosso o aggiunto, bisogna correttamente aggiornare anche la tabella delle pagine.
 
+## SWAPFILE
+Il progetto ci richiede di scrivere su un file chiamato SWAPFILE le pagine che vanno scritte in memoria. Creiamo dunque dei file di supporto, swapfile.h e swapfile.c, nei quali scriviamo il codice per implementare tale logica.
+Per quanto riguarda la lettura e scrittura, anziché usare le classiche fread e fwrite, che sarebbero andate anche bene e che avrebbero garantito una maggiore portabilità (almeno di questo modulo), sfruttiamo le tipiche funzioni forniteci dall'interfaccia di OS161: VOP_READ e VOP_WRITE. Queste due funzioni (che tra l'altro possono chiamare una read o write virtuali o non, in base alla configurazione) lavorano su una struct vnode (FCB) che ho definito come variabile globale.
+Lo swapfile dunque viene inizializzato nella swap_init con vfs_open che, nel modo in cui è stato scritto, ci dà i permessi di lettura e scrittura sul file, lo apre e se grazie a O_CREAT se non è stato ancora creato lo crea.
+
+Nelle funzioni swap_in (da cambiare forse in swap_push) e swap_out bisogna inizializzare le due classiche struct iovec e uio.
+Successivamente, si fa la chiamata a VOP_WRITE o VOP_READ per la scrittura o lettura sul file.
+
+Dopo una swap_out, allora significa che l'iesimo indirizzo scritto sullo swapfile non è più presente nello swapfile, è stato consumato. Anziché fare un'ulteriore VOP_WRITE sugli stessi bit, e quindi consumare un'ulteriore operazione di I/O, ho deciso di utilizzare una semplice bitmap, in cui l'indice dell'array indica se lo stesso indice per lo swapfile è valido oppure no, ossia se contiene un indirizzo valido oppure consumato e quindi non più valido.
+Sfrutto due macro definite in swapfile.h che sono SF_ABSENT=0 e SF_PRESENT=1;
+
+Nelle operazioni di lettura e scrittura, visto che stiamo usando anche una bitmap, ho introdotto uno spinlock per essere sicuri di stare leggendo una entry valida o non valida, per non avere race conditions.
+
+Per quanto riguarda la dimensione, che deve essere fissata a 9MB, facciamo ancora uso delle funzioni che ci fornisce l'interfaccia di OS161 e chiamiamo la VOP_TRUNCATE. Di seguito chat gpt ci spiega a cosa serve:
+
+La funzione VOP_TRUNCATE è una funzione definita nell'interfaccia del file system di OS/161. Essa è utilizzata per modificare la dimensione di un file specifico nel sistema di file. In particolare, VOP_TRUNCATE viene utilizzata per ridimensionare un file alla dimensione specificata.
+
+La firma della funzione VOP_TRUNCATE è la seguente:
+
+int VOP_TRUNCATE(struct vnode *v, off_t newlen);
+
+Dove:
+
+    v è un puntatore alla struttura struct vnode che rappresenta il file nel sistema di file.
+    newlen è la nuova lunghezza (dimensione) desiderata per il file.
+
+Quando chiami VOP_TRUNCATE, il sistema di file esegue le operazioni necessarie per modificare la dimensione del file in base al valore specificato in newlen. Questo potrebbe comportare il taglio del file o l'estensione del file, a seconda del valore di newlen.
+
+Nel contesto della gestione della memoria virtuale e del file di swap, utilizzare VOP_TRUNCATE per impostare la dimensione massima del file di swap garantisce che il file abbia una dimensione fissa e non superi mai la dimensione desiderata (nel tuo caso, 9 MB).
+
 ## SEGMENTI
 L'ELF header e il program header (PHDR) sono entrambi elementi fondamentali dei file ELF (Executable and Linkable Format), ma svolgono ruoli diversi all'interno di un file ELF.
 

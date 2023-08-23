@@ -44,6 +44,6 @@ vaddr_t alloc_kpages(unsigned);
 void free_kpages(vaddr_t);
 
 // TO DO: Write this function
-vaddr_t alloc_upage(void);
+paddr_t alloc_upage(void);
 
 #endif /* _COREMAP_H_ */

@@ -19,41 +19,43 @@
 
 #include "pt.h"
 
-
-
-
 struct spinlock free_pt = SPINLOCK_INITIALIZER;
 
 /* Page Table */
 // TO DO: check 
-//struct pt_entry pt[PT_SIZE];
 struct pt_entry* pt = NULL;
 
-/* Queue for FIFO support */
+/* **Queue for FIFO support** */
+/* queue_fifo contains page numbers (index)*/
 static unsigned int queue_fifo[PT_SIZE];
 static unsigned int queue_front = 0;
 static unsigned int queue_rear = 0;
 
-static unsigned int pt_fifo() {
-    KASSERT(queue_front != queue_rear);
-
-    /* Pop on queue_fifo */
-    unsigned int old = queue_fifo[queue_front];
-    // TO DO: write on swapfile -> call a function in swapfile.c
-    pt_free(queue_front);
-    queue_front = (queue_front + 1) % PT_SIZE;
-    
-    return old;
-}
-
-
 void pt_init(){
+    int i;
     pt = (struct pt_entry*) kmalloc(sizeof(struct pt_entry)*PT_SIZE);
     if (pt==NULL){
         return;
     }
-    
     pt_clean_up();
+
+    for (i=0; i<PT_SIZE; i++){
+        queue_fifo[i]=0;
+    }
+}
+
+/* Pop on queue_fifo */
+static unsigned int pt_fifo() {
+    KASSERT(queue_front != queue_rear);
+
+    /* index of old page to pop */
+    unsigned int old = queue_fifo[queue_front];
+    //write on swapfile -> call a function in swapfile.c
+    pt_swap_push(pt[old]);
+    pt_page_free(old);
+    queue_front = (queue_front + 1) % PT_SIZE;
+    
+    return old;
 }
 
 /* L'ho scritto in una funzione a parte perché potrebbe tornarci utile per azzerare la pt*/
@@ -66,7 +68,7 @@ void pt_clean_up(){
     }
 }
 
-void pt_free(unsigned int i){
+void pt_page_free(unsigned int i){
     pt[i].paddr=0;
     pt[i].status=ABSENT;
     pt[i].protection=PT_E_RW;
@@ -98,17 +100,16 @@ void pt_map(paddr_t p, vaddr_t v){
     pt[i].protection=PT_E_RW;
     
     /* Push on queue_fifo */
-    // TO DO: i comment the following line, but where is queue supposed to be declared
-    //queue[queue_rear] = i; /* we write the index of page table */
+    queue_fifo[queue_rear] = i; /* we write the index of page table */
     queue_rear = (queue_rear + 1) % PT_SIZE;  /* update of rear */
     spinlock_release(&free_pt);
 }
 
 void pt_fault(struct pt_entry* pt_e, uint32_t faulttype){
     unsigned int i;
-    (void)pt_e;
     switch(faulttype){
         case INVALID_MAP:
+        (void)pt_e;
         panic("Invalid input address for paging\n");
         case NOT_MAPPED:
         {
@@ -121,11 +122,14 @@ void pt_fault(struct pt_entry* pt_e, uint32_t faulttype){
         /*Also, where is pt_e supposed to be used ?*/
         //see before the switch
 
-            paddr_t p = alloc_upage();
+            paddr_t p = alloc_upage(); //o vaddr_t?
 
             if(p==0){
                 i = pt_fifo();
-                pt_map(pt[i].paddr, PAGE_SIZE*i /* =vaddr*/);
+                pt_map(pt_e->paddr, PAGE_SIZE*i /* =vaddr*/);
+            } else {
+                // c'è spazio e si alloca
+
             }
         }
         break;
@@ -164,11 +168,13 @@ void pt_swap_push(struct pt_entry* pt_e){
     swap_in(pt_e->paddr);
 }
 
-struct pt_entry pt_swap_pop(struct pt_entry* pt_e){
-    struct pt_entry res;
-    // TO DO: same thing
-    //res=swap_out(pt_e);
-    swap_out(pt_e->paddr);
+paddr_t pt_swap_pop(struct pt_entry* pt_e){
+    paddr_t res;
+
+    res=swap_out(pt_e->paddr);
+    if(res){
+        perror("pt_swap_pop: unable to pop paddr 0x%d from swapfile\n", pt_e->paddr);
+    }
 
     return res;
 }

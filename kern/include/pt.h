@@ -40,13 +40,13 @@ struct pt_entry{
 #define PT_E_RW 2 /* Read-write */
 
 void pt_init(void);
-void pt_free(unsigned int);
+void pt_page_free(unsigned int);
 void pt_clean_up(void);
 void pt_destroy(void);
 void pt_fault(struct pt_entry*, uint32_t);
 void pt_map(paddr_t, vaddr_t);
 paddr_t pt_translate(vaddr_t);
 void pt_swap_push(struct pt_entry*);
-struct pt_entry pt_swap_pop(struct pt_entry*);
+paddr_t pt_swap_pop(struct pt_entry*);
 
 #endif

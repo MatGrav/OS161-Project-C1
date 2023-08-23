@@ -15,12 +15,14 @@
 #include <pt.h>
 #include <segment.h>
 #include <vm_tlb.h>
+#include <swapfile.h>
 #include <vmstats.h>
 
 /* Initialization function */
 void vm_bootstrap(void){
 	coremap_init();
-	//pt_init();
+	pt_init();
+	swap_init();
 	vmstats_init();
 }
 

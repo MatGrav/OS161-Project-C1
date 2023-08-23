@@ -3,10 +3,9 @@
 
 #define SWAPFILE_SIZE 9*1024*1024
 
-struct swapfile_entry{
-    paddr_t paddr;
-    size_t index;
-};
+/* Values for bitmap */
+#define SF_ABSENT 0
+#define SF_PRESENT 1
 
 void swap_init(void);
 void swap_clean_up(void);
