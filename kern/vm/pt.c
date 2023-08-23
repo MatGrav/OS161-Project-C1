@@ -51,7 +51,7 @@ static unsigned int pt_fifo() {
     /* index of old page to pop */
     unsigned int old = queue_fifo[queue_front];
     //write on swapfile -> call a function in swapfile.c
-    pt_swap_push(pt[old]);
+    pt_swap_push(&pt[old]);
     pt_page_free(old);
     queue_front = (queue_front + 1) % PT_SIZE;
     
@@ -169,7 +169,7 @@ paddr_t pt_swap_pop(struct pt_entry* pt_e){
 
     res=swap_out(pt_e->paddr);
     if(res){
-        perror("pt_swap_pop: unable to pop paddr 0x%d from swapfile\n", pt_e->paddr);
+        //perror("pt_swap_pop: unable to pop paddr 0x%d from swapfile\n", pt_e->paddr);
     }
 
     return res;

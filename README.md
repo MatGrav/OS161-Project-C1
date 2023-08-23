@@ -189,5 +189,14 @@ La TLB comunica con la page table principalmente nei seguenti casi:
 -> Context Switch: Quando avviene un cambio di contesto tra due processi, il contenuto della TLB deve essere invalidato o sostituito con le nuove traduzioni della page table del nuovo processo. Questo è necessario perché il mapping tra gli indirizzi virtuali e gli indirizzi fisici è diverso per ciascun processo.
 
 
+## TO DO
 
+Da fare:
+1- Controllare tutti i commenti TO DO nel codice
+1.1- Rimuovere tutte le include commentate
+2- Completare addrspace
+2.1 - Capire cosa fare con seg stack
+3- Completare load_elf
+4- Far funzionare veramente i programmi user
+5- Fare in modo che premendo q nel menu si stampino le vmstats
 

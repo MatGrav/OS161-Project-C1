@@ -10,7 +10,6 @@
 #include <coremap.h>
 
 
-
 static struct spinlock stealmem_lock = SPINLOCK_INITIALIZER;
 
 static struct spinlock coremap_lock = SPINLOCK_INITIALIZER;
@@ -265,24 +264,20 @@ void free_kpages(vaddr_t addr){
     unsigned int npages = cmap->entry[paddr/PAGE_SIZE].consec_pages;
     spinlock_release(&coremap_lock);
 
-    // TO DO: think about how to find the number of pages
-    // We don't have allocSize
     freeppages(paddr, npages);	
   }
 }
 
 vaddr_t
-alloc_upage(unsigned npages){
+alloc_upage(){
 
   paddr_t pa;
 
-	novavm_can_sleep(); //?
-	pa = getppages(npages);
+	novavm_can_sleep();
+	pa = getppages(1);
 	if (pa==0) {
 		return 0;
 	}
-	
+	return PADDR_TO_KVADDR(pa);
 
-
-  return pa; //NO
 }

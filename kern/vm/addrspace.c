@@ -228,7 +228,7 @@ as_define_region(struct addrspace *as, vaddr_t vaddr, size_t memsize,
 		as->stack->npage=npages;
 		as->stack->permission=S_RW;
 		as->stack->file_elf=v;
-		as->stack->filesize=filsize;
+		as->stack->filesize=filesize;
 		as->stack->offset=offset;
 		return 0;
 	}
