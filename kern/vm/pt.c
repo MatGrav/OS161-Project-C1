@@ -114,23 +114,19 @@ void pt_fault(struct pt_entry* pt_e, uint32_t faulttype){
         case NOT_MAPPED:
         {
         /* Wr're trying to access to a not mapped page */
-        /* Let's update it in memory*/
-        
-        // TO DO: I changed this line?
-        //paddr_t p = getppages(1);
+        /* Let's update it in memory and so in page table */
+        vaddr_t v = alloc_upage();
 
-        /*Also, where is pt_e supposed to be used ?*/
-        //see before the switch
+        if(v==0){
+            /* there's not enough space -> substitute */
+            i = pt_fifo();
+            v = i*PAGE_SIZE;
+            pt_map(pt_e->paddr, v);
+        } else {
+            /* there's enough free space*/
+            pt_map(pt_e->paddr, v);
+        }
 
-            paddr_t p = alloc_upage(); //o vaddr_t?
-
-            if(p==0){
-                i = pt_fifo();
-                pt_map(pt_e->paddr, PAGE_SIZE*i /* =vaddr*/);
-            } else {
-                // c'è spazio e si alloca
-
-            }
         }
         break;
         default:

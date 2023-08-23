@@ -121,12 +121,9 @@ as_destroy(struct addrspace *as)
 {
 	novavm_can_sleep();
 
-	// TO DO: Uhm freeppages is static, therefore not visible ?
-	/*
-	freeppages(pt_get_page(as->code->vaddr), as->code->npage);
-	freeppages(pt_get_page(as->data->vaddr), as->data->npage);
-	freeppages(pt_get_page(as->stack->vaddr), as->stack->npage);
-	*/
+	free_kpages(as->code->vaddr);
+	free_kpages(as->data->vaddr);
+	free_kpages(as->stack->vaddr);
 
 	kfree(as->code);
 	kfree(as->data);
@@ -223,10 +220,7 @@ as_define_region(struct addrspace *as, vaddr_t vaddr, size_t memsize,
 		return 0;
 	}
 
-	/*
-	
-	Stack?
-
+	// Attention: need to align the stack, how?
 	if (as->stack->vaddr==0){
 		as->stack->vaddr=vaddr;
 		as->stack->as=as;
@@ -238,7 +232,6 @@ as_define_region(struct addrspace *as, vaddr_t vaddr, size_t memsize,
 		as->stack->offset=offset;
 		return 0;
 	}
-	*/
 
 
 	(void)readable;
@@ -249,7 +242,7 @@ as_define_region(struct addrspace *as, vaddr_t vaddr, size_t memsize,
 	/*
 	 * Support for more than two regions is not available.
 	 */
-	kprintf("dumbvm: Warning: too many regions\n");
+	kprintf("addrspace.c: Warning: too many regions\n");
 	return ENOSYS;
 }
 

@@ -271,8 +271,7 @@ void free_kpages(vaddr_t addr){
   }
 }
 
-/* TO DO: write it */
-paddr_t
+vaddr_t
 alloc_upage(unsigned npages){
 
   paddr_t pa;
@@ -283,5 +282,7 @@ alloc_upage(unsigned npages){
 		return 0;
 	}
 	
-  return pa;
+
+
+  return pa; //NO
 }
