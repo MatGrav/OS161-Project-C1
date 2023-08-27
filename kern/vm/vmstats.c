@@ -19,10 +19,10 @@ static int isVmstatsActive(){
 }
 
 void vmstats_init(){
-    spinlock_acquire(&vmstats_lock);
     for(int i=0;i<NUM_OF_STATS;i++){
         vmstats[i]=0;
     }
+    spinlock_acquire(&vmstats_lock);
     vmstatsActive = 1;
     spinlock_release(&vmstats_lock);
 }

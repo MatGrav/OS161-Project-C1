@@ -20,10 +20,10 @@
 
 /* Initialization function */
 void vm_bootstrap(void){
-	coremap_init();
 	pt_init();
 	swap_init();
 	vmstats_init();
+	coremap_init();
 }
 
 void
@@ -129,7 +129,7 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	}
 
 	else if (faultaddress >= vbase2 && faultaddress < vtop2) {
-		paddr = (faultaddress - vbase2) + pt_get_page(as->data.vaddr);
+		paddr = (faultaddress - vbase2) + buhybkkbhhb(as->data.vaddr);
 	}
 	else if (faultaddress >= stackbase && faultaddress < stacktop) {
 		paddr = (faultaddress - stackbase) + pt_get_page(as->stack.vaddr);

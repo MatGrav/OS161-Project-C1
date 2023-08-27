@@ -13,6 +13,8 @@
 #include <spinlock.h>
 
 
+
+
 static struct vnode* swapfile = NULL;
 static unsigned int* bitmap = NULL; 
 static struct spinlock swap_free = SPINLOCK_INITIALIZER;
@@ -20,9 +22,10 @@ static struct spinlock swap_free = SPINLOCK_INITIALIZER;
 
 void swap_init(){
     int result, i;
-    char sf_name[] = "swapfile.txt"; // Nome del file di swap
+    
+    char sf_name[] = "emu0:/SWAPFILE"; // Nome del file di swap
 
-    result = vfs_open(sf_name, O_RDWR | O_CREAT, 0664, &swapfile);
+    result = vfs_open(sf_name, O_RDWR | O_CREAT, 0, &swapfile);
     // if result != 0 -> true condition, ok -> reading the body
     // if result == 0 -> false condition -> not reading the body
     if (result) {
@@ -36,7 +39,8 @@ void swap_init(){
 
     bitmap = kmalloc(sizeof(unsigned int) * SWAPFILE_SIZE/PAGE_SIZE);
     if(bitmap == NULL){
-        perror("swap_init: unable to allocate bitmap\n");
+        //perror("swap_init: unable to allocate bitmap\n");
+        panic("swap_init: unable to allocate bitmap\n");
         return;
     }
     for(i=0; i<SWAPFILE_SIZE/PAGE_SIZE; i++){
@@ -71,8 +75,6 @@ void swap_in(paddr_t paddr){
     ku.uio_segflg = UIO_USERSPACE;
     ku.uio_rw = UIO_WRITE;
     ku.uio_space = NULL;
-
-    (void)ku; //temp fix
     
     spinlock_acquire(&swap_free);
     VOP_WRITE(swapfile, &ku);

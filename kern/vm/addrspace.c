@@ -42,7 +42,10 @@
 
 #include <spl.h>
 
+#include "opt-novavm.h"
+
 #include <mips/tlb.h>
+
 
 
 
@@ -234,7 +237,7 @@ as_define_region(struct addrspace *as, vaddr_t vaddr, size_t memsize,
 		as->stack->npage=npages;
 		as->stack->permission=S_RW;
 		as->stack->file_elf=v;
-		as->stack->filesize=filsize;
+		as->stack->filesize=filesize;
 		as->stack->offset=offset;
 		return 0;
 	}
@@ -255,6 +258,7 @@ as_define_region(struct addrspace *as, vaddr_t vaddr, size_t memsize,
 int
 as_prepare_load(struct addrspace *as)
 {
+
 	(void)as;
 	paddr_t p1=0, p2=0, p3=0;
 	/* TO DO
@@ -303,13 +307,16 @@ as_complete_load(struct addrspace *as)
 int
 as_define_stack(struct addrspace *as, vaddr_t *stackptr)
 {
-	(void)as;
-	//KASSERT(pt_get_page(as->stack->vaddr) != 0);
-	//KASSERT(pt_get_page(as->stack->vaddr) != 0);
 
+#if OPT_NOVAVM
+	(void)as;
+	
+
+	*stackptr = USERSTACK;
+#else 
+	(void)as;
 
 	/* Initial user-level stack pointer */
-	// ??????????????
 	*stackptr = USERSTACK;
 
 	return 0;
