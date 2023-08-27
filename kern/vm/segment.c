@@ -41,6 +41,12 @@ segment_create_and_populate(struct addrspace *as, struct vnode *v,
     s->npage=0;
     s->offset=offset;
     s->permission=is_executable? S_EX : S_RO;
+
+    // TO DO
+    (void)vaddr;
+
+    // TO DO: immagino ci debba essere scritto questo
+    return s;
 }
 
 void
@@ -79,10 +85,10 @@ segment_copy(struct segment *old, struct segment **ret){
 
 int segment_prepare_load(struct segment* s){
     
-    KASSERT(seg->is_loaded == NOT_LOADED);
+    KASSERT(s->is_loaded == NOT_LOADED);
 
     s->vaddr=alloc_upage();
-    vaddr_t v = s->vaddr
+    vaddr_t v = s->vaddr;
 
     return v;
 }

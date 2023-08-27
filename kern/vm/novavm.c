@@ -105,7 +105,7 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	KASSERT((as->data->vaddr & PAGE_FRAME) == as->data->vaddr);
 	KASSERT((as->stack->vaddr & PAGE_FRAME) == as->data->vaddr);
 
-	/
+	
 	paddr = pt_translate(faultaddress);
 
 	if(paddr == 0){

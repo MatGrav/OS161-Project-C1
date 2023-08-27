@@ -213,7 +213,6 @@ void
 kmain(char *arguments)
 {
 	boot();
-	
 	menu(arguments);
 
 	/* Should not get here */

@@ -29,7 +29,7 @@ struct segment{
 
 struct segment* segment_create(void);
 void segment_init(struct segment*);
-void segment_create_and_populate(struct addrspace*, struct vnode*, off_t, vaddr_t, size_t, size_t, int);
+struct segment* segment_create_and_populate(struct addrspace*, struct vnode*, off_t, vaddr_t, size_t, size_t, int);
 void segment_destroy(struct segment*);
 int segment_copy(struct segment*, struct segment**);
 int segment_prepare_load(struct segment*);

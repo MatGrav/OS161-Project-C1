@@ -311,12 +311,14 @@ as_define_stack(struct addrspace *as, vaddr_t *stackptr)
 	
 
 	*stackptr = USERSTACK;
-#else 
+	return 0;
+#else
 	(void)as;
 
 	/* Initial user-level stack pointer */
 	*stackptr = USERSTACK;
 
 	return 0;
+#endif
 }
 

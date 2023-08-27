@@ -174,7 +174,7 @@ load_elf(struct vnode *v, vaddr_t *entrypoint)
 	struct uio ku;
 	struct addrspace *as;
 
-	struct segment *s;
+	struct segment* s;
 
 	as = proc_getas();
 
@@ -305,9 +305,11 @@ load_elf(struct vnode *v, vaddr_t *entrypoint)
 			return ENOEXEC;
 		}
 
-		struct segment s* = segment_create_and_populate(as, v, ph.p_offset, ph.p_vaddr,
+		s = segment_create_and_populate(as, v, ph.p_offset, ph.p_vaddr,
 				      ph.p_memsz, ph.p_filesz,
-				      ph.p_flags & PF_X*);
+				      ph.p_flags & PF_X);
+		
+
 		
 		result = load_segment(/*as, v, ph.p_offset, ph.p_vaddr,
 				      ph.p_memsz, ph.p_filesz,

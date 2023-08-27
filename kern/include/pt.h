@@ -5,12 +5,14 @@
 #include <types.h>
 
 #include <coremap.h>
+#include <machine/vm.h>
+
 
 // TO DO : sOlve this problem
 //The following thing does not compile
 //#define PT_SIZE get_nRamFrames()/2
-
-#define PT_SIZE 2^32 / 4096
+//#define PT_SIZE (2^32 / 4096)
+#define PT_SIZE 2*(9*1024*1024/PAGE_SIZE)
 
 /* Mask to obtain the displacement from a virtual address */
 #define DISPLACEMENT_MASK 0xFFF
