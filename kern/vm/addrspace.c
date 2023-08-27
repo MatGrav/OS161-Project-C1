@@ -260,7 +260,7 @@ as_prepare_load(struct addrspace *as)
 {
 
 	(void)as;
-	paddr_t p1=0, p2=0, p3=0;
+	paddr_t p1, p2, p3;
 	/* TO DO
 	KASSERT(pt_get_page(as->code->vaddr) == 0);
 	KASSERT(pt_get_page(as->data->vaddr) == 0);
@@ -272,16 +272,16 @@ as_prepare_load(struct addrspace *as)
 	/* ATTENZIONE: l'address space deve lavorare con l'indirizzo virtuale, non fisico  */
 	/* TO DO: getppages è static, non visibile in addrspace.c --> ?? */
 	
-	//p1=getppages(as->code->npage);
-	if (p1 == 0) {
+	p1=segment_prepare_load(as->code);
+	if (p1) {
 		return ENOMEM;
 	}
-	//p2=getppages(as->data->npage);
-	if (p2 == 0) {
+	p2=segment_prepare_load(as->data);
+	if (p2) {
 		return ENOMEM;
 	}
-	//p3=getppages(as->stack->npage);
-	if (p3 == 0) {
+	p3=segment_prepare_load(as->stack);
+	if (p3) {
 		return ENOMEM;
 	}
 

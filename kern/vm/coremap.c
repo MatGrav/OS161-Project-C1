@@ -278,6 +278,7 @@ alloc_upage(){
 	if (pa==0) {
 		return 0;
 	}
+  //pt_map?
 	return PADDR_TO_KVADDR(pa);
 
 }

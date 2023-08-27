@@ -1,6 +1,7 @@
 #include <segment.h>
 #include <lib.h>
-#include <types.h> 
+#include <types.h>
+#include <coremap.h> 
 
 struct segment*
 segment_create(){
@@ -57,6 +58,22 @@ segment_copy(struct segment *old, struct segment **ret){
 	*ret = newsg; /* we pass the segment here */
 
 	return 0;
+}
+
+int segment_prepare_load(struct segment* s){
+    
+    KASSERT(seg->is_loaded == NOT_LOADED);
+
+    int i;
+    vaddr_t v;
+
+    for (i=0; i<s->npage; i++){
+        v=alloc_upage();
+        // UN SEGMENTO PUò stare su più pagine? sì, come gestire questo?
+    }
+
+    return 0;
+
 }
 
 

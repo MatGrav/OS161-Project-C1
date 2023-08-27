@@ -13,6 +13,7 @@ struct segment{
     unsigned int permission;
     struct vnode* file_elf; // serve per la load_segment
     struct addrspace* as; //puntatore all'address space a cui appartiene, serve alla load_segment
+    /* Maybe we need to add a spinlock? to work on it */
 };
 
 /* Values of is_loaded */
@@ -29,5 +30,6 @@ struct segment* segment_create(void);
 void segment_init(struct segment*);
 void segment_destroy(struct segment*);
 int segment_copy(struct segment*, struct segment**);
+int segment_prepare_load(struct segment*);
 
 #endif

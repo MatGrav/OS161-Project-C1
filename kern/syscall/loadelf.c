@@ -87,6 +87,9 @@ load_segment(/*struct addrspace *as, struct vnode *v,
 	struct uio u;
 	int result;
 
+	s->is_loaded=PARTIALLY_LOADED;
+
+
 	if (s->filesize > s->memsize) {
 		kprintf("ELF: warning: segment filesize > segment memsize\n");
 		s->filesize = s->memsize;
@@ -148,7 +151,7 @@ load_segment(/*struct addrspace *as, struct vnode *v,
 		}
 	}
 #endif
-
+	s->is_loaded=TOTALLY_LOADED;
 	return result;
 }
 
