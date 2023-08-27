@@ -67,6 +67,11 @@ as_create(void)
 	as->data=segment_create();
 	as->stack=segment_create();
 
+	if (as->code == NULL || as->data == NULL || as->stack == NULL) {
+        as_destroy(as);
+        return NULL;
+    }
+
 	return as;
 }
 
@@ -125,9 +130,10 @@ as_destroy(struct addrspace *as)
 	free_kpages(as->data->vaddr);
 	free_kpages(as->stack->vaddr);
 
-	kfree(as->code);
-	kfree(as->data);
-	kfree(as->stack);
+	segment_destroy(as->code);
+	segment_destroy(as->data);
+	segment_destroy(as->stack);
+
 	kfree(as);
 }
 
@@ -242,7 +248,7 @@ as_define_region(struct addrspace *as, vaddr_t vaddr, size_t memsize,
 	/*
 	 * Support for more than two regions is not available.
 	 */
-	kprintf("addrspace.c: Warning: too many regions\n");
+	kprintf("Warning [addrspace.c]: too many regions\n");
 	return ENOSYS;
 }
 

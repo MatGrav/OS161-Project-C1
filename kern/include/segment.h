@@ -26,7 +26,8 @@ struct segment{
 #define S_RW 2 /* Read-write*/
 
 struct segment* segment_create(void);
-void segment_init(struct segment *s);
+void segment_init(struct segment*);
+void segment_destroy(struct segment*);
 int segment_copy(struct segment*, struct segment**);
 
 #endif

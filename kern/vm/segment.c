@@ -5,6 +5,9 @@
 struct segment*
 segment_create(){
     struct segment* s = kmalloc(sizeof(struct segment));
+    if(s==NULL){
+        return NULL;
+    }
     segment_init(s);
 
     return s;
@@ -20,6 +23,15 @@ segment_init(struct segment *s){
     s->permission = S_RO;
     s->file_elf = NULL;
     s->as = NULL;
+}
+
+void
+segment_destroy(struct segment *s)
+{
+    if (s==NULL){
+        return;
+    }
+    kfree(s);
 }
 
 int
