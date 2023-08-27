@@ -26,6 +26,23 @@ segment_init(struct segment *s){
     s->as = NULL;
 }
 
+struct segment*
+segment_create_and_populate(struct addrspace *as, struct vnode *v,
+	     off_t offset, vaddr_t vaddr,
+	     size_t memsize, size_t filesize,
+	     int is_executable)
+{
+    struct segment* s = segment_create();
+    s->as=as;
+    s->file_elf=v;
+    s->filesize=filesize;
+    s->is_loaded=NOT_LOADED;
+    s->memsize=memsize;
+    s->npage=0;
+    s->offset=offset;
+    s->permission=is_executable? S_EX : S_RO;
+}
+
 void
 segment_destroy(struct segment *s)
 {
@@ -64,16 +81,10 @@ int segment_prepare_load(struct segment* s){
     
     KASSERT(seg->is_loaded == NOT_LOADED);
 
-    int i;
-    vaddr_t v;
+    s->vaddr=alloc_upage();
+    vaddr_t v = s->vaddr
 
-    for (i=0; i<s->npage; i++){
-        v=alloc_upage();
-        // UN SEGMENTO PUò stare su più pagine? sì, come gestire questo?
-    }
-
-    return 0;
-
+    return v;
 }
 
 

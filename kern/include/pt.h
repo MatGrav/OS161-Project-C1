@@ -10,7 +10,7 @@
 //The following thing does not compile
 //#define PT_SIZE get_nRamFrames()/2
 
-#define PT_SIZE 1024*1024
+#define PT_SIZE 2^32 / 4096
 
 /* Mask to obtain the displacement from a virtual address */
 #define DISPLACEMENT_MASK 0xFFF

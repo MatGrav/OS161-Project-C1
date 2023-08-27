@@ -73,7 +73,7 @@ void swap_in(paddr_t paddr){
     ku.uio_offset = index * sizeof(paddr_t);
     ku.uio_resid = sizeof(paddr_t);
     ku.uio_segflg = UIO_USERSPACE;
-    ku.uio_rw = UIO_WRITE;
+    ku.uio_rw = UIO_WRITE; /* from uio_seg to kernel */
     ku.uio_space = NULL;
     
     spinlock_acquire(&swap_free);
@@ -102,7 +102,7 @@ paddr_t swap_out(paddr_t paddr){
     ku.uio_offset = index * sizeof(paddr_t);
     ku.uio_resid = sizeof(paddr_t);
     ku.uio_segflg = UIO_USERSPACE;
-    ku.uio_rw = UIO_READ;
+    ku.uio_rw = UIO_READ; /* from kernel to uio_seg */
     ku.uio_space = NULL;
 
 

@@ -194,9 +194,9 @@ La TLB comunica con la page table principalmente nei seguenti casi:
 Da fare:
 1- Controllare tutti i commenti TO DO nel codice
 1.1- Rimuovere tutte le include commentate
-2- Completare addrspace
-2.1 - Capire cosa fare con seg stack
-3- Completare load_elf
+2- Completare addrspace (fatto)
+2.1 - Capire cosa fare con seg stack -> definire funzioni apposite per la creazione, inizializzazione e allocazione
+3- Completare load_elf (fatto ma fare check insieme su dimensioni segmento e pagina)
 4- Far funzionare veramente i programmi user
 5- Fare in modo che premendo q nel menu si stampino le vmstats
 

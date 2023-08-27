@@ -84,7 +84,12 @@ void pt_destroy(){
 /* I obtain the page number dividing by PAGE_SIZE; I obtain the frame number from the page table */
 void pt_map(paddr_t p, vaddr_t v){
     
-    //TO DO allineamento p + KASSERT
+    KASSERT(p!=0);
+    KASSERT(v!=0);
+
+    /* To be sure it is aligned */
+    p |= PAGE_FRAME;
+
 
     /* PAGE NUMBER */
     unsigned int i = (unsigned int) v/PAGE_SIZE;

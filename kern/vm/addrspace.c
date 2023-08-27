@@ -205,12 +205,13 @@ as_define_region(struct addrspace *as, vaddr_t vaddr, size_t memsize,
 
 	npages = memsize / PAGE_SIZE;
 
+	/* Text segment is read-only (S_RO)*/
 	if (as->code->vaddr==0){
 		as->code->vaddr=vaddr;
 		as->code->as= as;
 		as->code->memsize=memsize;
 		as->code->npage=npages;
-		as->code->permission=S_RW;
+		as->code->permission=S_RO;
 		as->code->file_elf=v;
 		as->code->filesize=filesize;
 		as->code->offset=offset;
@@ -229,7 +230,7 @@ as_define_region(struct addrspace *as, vaddr_t vaddr, size_t memsize,
 		return 0;
 	}
 
-	// Attention: need to align the stack, how?
+	/* Need to implement a function to initialize the stack segment
 	if (as->stack->vaddr==0){
 		as->stack->vaddr=vaddr;
 		as->stack->as=as;
@@ -241,6 +242,7 @@ as_define_region(struct addrspace *as, vaddr_t vaddr, size_t memsize,
 		as->stack->offset=offset;
 		return 0;
 	}
+	*/
 
 
 	(void)readable;
@@ -261,27 +263,23 @@ as_prepare_load(struct addrspace *as)
 
 	(void)as;
 	paddr_t p1, p2, p3;
-	/* TO DO
-	KASSERT(pt_get_page(as->code->vaddr) == 0);
-	KASSERT(pt_get_page(as->data->vaddr) == 0);
-	KASSERT(pt_get_page(as->stack->vaddr) == 0);
-	*/
+
+	KASSERT(as->code->vaddr == 0);
+	KASSERT(as->data->vaddr == 0);
+	KASSERT(as->stack->vaddr == 0);
 
 	novavm_can_sleep();
-
-	/* ATTENZIONE: l'address space deve lavorare con l'indirizzo virtuale, non fisico  */
-	/* TO DO: getppages è static, non visibile in addrspace.c --> ?? */
 	
 	p1=segment_prepare_load(as->code);
-	if (p1) {
+	if (p1==0) {
 		return ENOMEM;
 	}
 	p2=segment_prepare_load(as->data);
-	if (p2) {
+	if (p2==0) {
 		return ENOMEM;
 	}
 	p3=segment_prepare_load(as->stack);
-	if (p3) {
+	if (p3==0) {
 		return ENOMEM;
 	}
 

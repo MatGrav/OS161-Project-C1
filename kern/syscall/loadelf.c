@@ -61,6 +61,7 @@
 #include <elf.h>
 
 #include <segment.h>
+#include <pt.h>
 
 /*
  * Load a segment at virtual address VADDR. The segment in memory
@@ -105,12 +106,12 @@ load_segment(/*struct addrspace *as, struct vnode *v,
 	u.uio_iovcnt = 1;
 	u.uio_resid = s->filesize;          // amount to read from the file
 	u.uio_offset = s->offset;
-	if (s->permission==S_EX){
+	if (s->permission==S_RO){
 		u.uio_segflg = UIO_USERISPACE;
 	} else {
 		u.uio_segflg = UIO_USERSPACE;
 	}
-	u.uio_rw = UIO_READ; //?
+	u.uio_rw = UIO_READ; /* i am reading from file elf */
 	u.uio_space = s->as;
 
 	result = VOP_READ(s->file_elf, &u);
@@ -151,6 +152,9 @@ load_segment(/*struct addrspace *as, struct vnode *v,
 		}
 	}
 #endif
+
+	paddr_t p = pt_translate(s->vaddr);
+	pt_map(p, s->vaddr);
 	s->is_loaded=TOTALLY_LOADED;
 	return result;
 }
@@ -301,8 +305,10 @@ load_elf(struct vnode *v, vaddr_t *entrypoint)
 			return ENOEXEC;
 		}
 
-		s=segment_create();
-
+		struct segment s* = segment_create_and_populate(as, v, ph.p_offset, ph.p_vaddr,
+				      ph.p_memsz, ph.p_filesz,
+				      ph.p_flags & PF_X*);
+		
 		result = load_segment(/*as, v, ph.p_offset, ph.p_vaddr,
 				      ph.p_memsz, ph.p_filesz,
 				      ph.p_flags & PF_X*/ s);
