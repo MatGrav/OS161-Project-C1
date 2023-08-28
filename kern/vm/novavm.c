@@ -49,6 +49,9 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	struct addrspace *as;
 	int spl;
 
+	/* TO DO : WARNING: JUst for debug, don't think this is ok*/
+	if(faultaddress >= 4194704) { faultaddress = 4194704;}
+
 	faultaddress &= PAGE_FRAME;
 
 	DEBUG(DB_VM, "novavm: fault: 0x%x\n", faultaddress);

@@ -3,7 +3,6 @@
 
 #include <addrspace.h>
 
-
 #define UNDEF_CONSEC_PAGES 0 /* Frames for boot or user */
 
 #define MAX_NUM_ASS_ADDR 16

@@ -156,6 +156,7 @@ paddr_t pt_translate(vaddr_t v){
         pt_fault(NULL, INVALID_MAP);
     }
     
+    
     spinlock_acquire(&free_pt);
     /* frame number */
     p = pt[i].paddr;

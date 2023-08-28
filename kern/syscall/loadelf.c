@@ -59,10 +59,12 @@
 #include <addrspace.h>
 #include <vnode.h>
 #include <elf.h>
+#include "opt-novavm.h"
 
+#if OPT_NOVAVM
 #include <segment.h>
 #include <pt.h>
-
+#endif
 /*
  * Load a segment at virtual address VADDR. The segment in memory
  * extends from VADDR up to (but not including) VADDR+MEMSIZE. The
@@ -77,6 +79,7 @@
  * change this code to not use uiomove, be sure to check for this case
  * explicitly.
  */
+#if OPT_NOVAVM
 static
 int
 load_segment(/*struct addrspace *as, struct vnode *v,
@@ -139,7 +142,7 @@ load_segment(/*struct addrspace *as, struct vnode *v,
 	 * diagnostic tool. Note that it must be disabled again before
 	 * you submit your code for grading.
 	 */
-#if 0
+	#if 0
 	{
 		size_t fillamt;
 
@@ -151,14 +154,86 @@ load_segment(/*struct addrspace *as, struct vnode *v,
 			result = uiomovezeros(fillamt, &u);
 		}
 	}
-#endif
+	#endif
 
 	paddr_t p = pt_translate(s->vaddr);
 	pt_map(p, s->vaddr);
 	s->is_loaded=TOTALLY_LOADED;
 	return result;
 }
+#else 
+static
+int
+load_segment(struct addrspace *as, struct vnode *v,
+	     off_t offset, vaddr_t vaddr,
+	     size_t memsize, size_t filesize,
+	     int is_executable)
+{
+	struct iovec iov;
+	struct uio u;
+	int result;
 
+	if (filesize > memsize) {
+		kprintf("ELF: warning: segment filesize > segment memsize\n");
+		filesize = memsize;
+	}
+
+	DEBUG(DB_EXEC, "ELF: Loading %lu bytes to 0x%lx\n",
+	      (unsigned long) filesize, (unsigned long) vaddr);
+
+	iov.iov_ubase = (userptr_t)vaddr;
+	iov.iov_len = memsize;		 // length of the memory space
+	u.uio_iov = &iov;
+	u.uio_iovcnt = 1;
+	u.uio_resid = filesize;          // amount to read from the file
+	u.uio_offset = offset;
+	u.uio_segflg = is_executable ? UIO_USERISPACE : UIO_USERSPACE;
+	u.uio_rw = UIO_READ;
+	u.uio_space = as;
+
+	result = VOP_READ(v, &u);
+	if (result) {
+		return result;
+	}
+
+	if (u.uio_resid != 0) {
+		/* short read; problem with executable? */
+		kprintf("ELF: short read on segment - file truncated?\n");
+		return ENOEXEC;
+	}
+
+	/*
+	 * If memsize > filesize, the remaining space should be
+	 * zero-filled. There is no need to do this explicitly,
+	 * because the VM system should provide pages that do not
+	 * contain other processes' data, i.e., are already zeroed.
+	 *
+	 * During development of your VM system, it may have bugs that
+	 * cause it to (maybe only sometimes) not provide zero-filled
+	 * pages, which can cause user programs to fail in strange
+	 * ways. Explicitly zeroing program BSS may help identify such
+	 * bugs, so the following disabled code is provided as a
+	 * diagnostic tool. Note that it must be disabled again before
+	 * you submit your code for grading.
+	 */
+	#if 0
+	{
+		size_t fillamt;
+
+		fillamt = memsize - filesize;
+		if (fillamt > 0) {
+			DEBUG(DB_EXEC, "ELF: Zero-filling %lu more bytes\n",
+			      (unsigned long) fillamt);
+			u.uio_resid += fillamt;
+			result = uiomovezeros(fillamt, &u);
+		}
+	}
+	#endif
+
+	return result;
+}	
+
+#endif
 /*
  * Load an ELF executable user program into the current address space.
  *
@@ -173,8 +248,6 @@ load_elf(struct vnode *v, vaddr_t *entrypoint)
 	struct iovec iov;
 	struct uio ku;
 	struct addrspace *as;
-
-	struct segment* s;
 
 	as = proc_getas();
 
@@ -258,6 +331,7 @@ load_elf(struct vnode *v, vaddr_t *entrypoint)
 			return ENOEXEC;
 		}
 
+		#if OPT_NOVAVM
 		result = as_define_region(as,
 					  ph.p_vaddr, ph.p_memsz,
 					  ph.p_flags & PF_R,
@@ -266,6 +340,13 @@ load_elf(struct vnode *v, vaddr_t *entrypoint)
 					  v,
 					  ph.p_filesz,
 					  ph.p_offset);
+		#else
+		result = as_define_region(as,
+					  ph.p_vaddr, ph.p_memsz,
+					  ph.p_flags & PF_R,
+					  ph.p_flags & PF_W,
+					  ph.p_flags & PF_X);
+		#endif
 		if (result) {
 			return result;
 		}
@@ -305,13 +386,18 @@ load_elf(struct vnode *v, vaddr_t *entrypoint)
 			return ENOEXEC;
 		}
 
-		s = segment_create_and_populate(as, v, ph.p_offset, ph.p_vaddr,
+		#if OPT_NOVAVM
+		struct segment* s = segment_create_and_populate(as, v, ph.p_offset, ph.p_vaddr,
 				      ph.p_memsz, ph.p_filesz,
 				      ph.p_flags & PF_X);
 		
-
-		
 		result = load_segment(s);
+		#else
+		result = load_segment(as, v, ph.p_offset, ph.p_vaddr,
+				      ph.p_memsz, ph.p_filesz,
+				      ph.p_flags & PF_X);
+		#endif
+
 		if (result) {
 			return result;
 		}
