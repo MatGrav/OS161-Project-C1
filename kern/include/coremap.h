@@ -35,7 +35,7 @@ struct coremap{
 /* Should be called during boot*/
 void coremap_init(void);
 
-unsigned int get_nRamFrames(void);
+int get_nRamFrames(void);
 void coremap_cleanup(void);
 unsigned long get_np_sz(void);
 

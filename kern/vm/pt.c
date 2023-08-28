@@ -27,7 +27,8 @@ struct pt_entry* pt = NULL;
 
 /* **Queue for FIFO support** */
 /* queue_fifo contains page numbers (index)*/
-static unsigned int queue_fifo[PT_SIZE];
+//static unsigned int queue_fifo[PT_SIZE];
+unsigned int* queue_fifo = NULL;
 static unsigned int queue_front = 0;
 static unsigned int queue_rear = 0;
 
@@ -38,6 +39,8 @@ void pt_init(){
         return;
     }
     pt_clean_up();
+
+    queue_fifo = kmalloc(sizeof(unsigned int)*PT_SIZE);
 
     for (i=0; i<PT_SIZE; i++){
         queue_fifo[i]=0;
@@ -92,7 +95,7 @@ void pt_map(paddr_t p, vaddr_t v){
 
 
     /* PAGE NUMBER */
-    unsigned int i = (unsigned int) v/PAGE_SIZE;
+    int i = (int) v/PAGE_SIZE;
     if(i>PT_SIZE){
         return;
     }
@@ -142,8 +145,10 @@ void pt_fault(struct pt_entry* pt_e, uint32_t faulttype){
 paddr_t pt_translate(vaddr_t v){
     paddr_t p; /* physical address of the frame (frame number) */
     /* PAGE NUMBER */
-    unsigned int i = (unsigned int) v/PAGE_SIZE;
-    if (i>PT_SIZE){
+    int i = (int) (v/PAGE_SIZE);
+    int s = get_nRamFrames();
+    int t = PT_SIZE;
+    if (i>t){
         pt_fault(NULL, INVALID_MAP);
     }
     
@@ -162,6 +167,8 @@ paddr_t pt_translate(vaddr_t v){
     /* physical address to return */
     p |= (v & DISPLACEMENT_MASK);
 
+    (void)s;
+    (void)t;
     return p;
 }
 

@@ -311,9 +311,7 @@ load_elf(struct vnode *v, vaddr_t *entrypoint)
 		
 
 		
-		result = load_segment(/*as, v, ph.p_offset, ph.p_vaddr,
-				      ph.p_memsz, ph.p_filesz,
-				      ph.p_flags & PF_X*/ s);
+		result = load_segment(s);
 		if (result) {
 			return result;
 		}

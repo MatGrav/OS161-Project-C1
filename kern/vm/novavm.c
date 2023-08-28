@@ -20,10 +20,10 @@
 
 /* Initialization function */
 void vm_bootstrap(void){
+	coremap_init();
 	pt_init();
 	swap_init();
 	vmstats_init();
-	coremap_init();
 }
 
 void
@@ -103,7 +103,7 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 
 	KASSERT((as->code->vaddr & PAGE_FRAME) == as->code->vaddr);
 	KASSERT((as->data->vaddr & PAGE_FRAME) == as->data->vaddr);
-	KASSERT((as->stack->vaddr & PAGE_FRAME) == as->data->vaddr);
+	KASSERT((as->stack->vaddr & PAGE_FRAME) == as->stack->vaddr);
 
 	
 	paddr = pt_translate(faultaddress);

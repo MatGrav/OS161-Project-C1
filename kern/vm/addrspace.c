@@ -33,6 +33,7 @@
 #include <addrspace.h>
 #include <vm.h>
 #include <proc.h>
+#include <machine/vm.h>
 
 #include <segment.h>
 #include <novavm.h>
@@ -230,21 +231,6 @@ as_define_region(struct addrspace *as, vaddr_t vaddr, size_t memsize,
 		return 0;
 	}
 
-	/* Need to implement a function to initialize the stack segment
-	if (as->stack->vaddr==0){
-		as->stack->vaddr=vaddr;
-		as->stack->as=as;
-		as->stack->memsize=memsize;
-		as->stack->npage=npages;
-		as->stack->permission=S_RW;
-		as->stack->file_elf=v;
-		as->stack->filesize=filesize;
-		as->stack->offset=offset;
-		return 0;
-	}
-	*/
-
-
 	(void)readable;
 	(void)writeable;
 	(void)executable;
@@ -262,11 +248,13 @@ as_prepare_load(struct addrspace *as)
 {
 
 	(void)as;
-	paddr_t p1, p2, p3;
+	paddr_t p1, p2;
 
+	/*
 	KASSERT(as->code->vaddr == 0);
 	KASSERT(as->data->vaddr == 0);
 	KASSERT(as->stack->vaddr == 0);
+	*/
 
 	novavm_can_sleep();
 	
@@ -278,10 +266,12 @@ as_prepare_load(struct addrspace *as)
 	if (p2==0) {
 		return ENOMEM;
 	}
+	/*
 	p3=segment_prepare_load(as->stack);
 	if (p3==0) {
 		return ENOMEM;
 	}
+	*/
 
 
 	/*
@@ -307,7 +297,22 @@ as_define_stack(struct addrspace *as, vaddr_t *stackptr)
 {
 
 #if OPT_NOVAVM
-	(void)as;
+	
+	as->stack = segment_create();
+	if (as->stack==NULL){
+		return ENOMEM;
+	}
+	
+	if (as->stack->vaddr==0){
+		as->stack->vaddr=USERSTACK-(NOVAVM_STACKPAGES*PAGE_SIZE);
+		as->stack->as=as;
+		as->stack->memsize=NOVAVM_STACKPAGES*PAGE_SIZE;
+		as->stack->npage=NOVAVM_STACKPAGES;
+		as->stack->permission=S_RW;
+		as->stack->file_elf=NULL;
+		as->stack->filesize=0;
+		as->stack->offset=0;
+	}
 	
 
 	*stackptr = USERSTACK;

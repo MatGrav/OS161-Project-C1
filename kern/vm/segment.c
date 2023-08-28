@@ -33,6 +33,7 @@ segment_create_and_populate(struct addrspace *as, struct vnode *v,
 	     int is_executable)
 {
     struct segment* s = segment_create();
+    s->vaddr=vaddr;
     s->as=as;
     s->file_elf=v;
     s->filesize=filesize;
@@ -42,10 +43,6 @@ segment_create_and_populate(struct addrspace *as, struct vnode *v,
     s->offset=offset;
     s->permission=is_executable? S_EX : S_RO;
 
-    // TO DO
-    (void)vaddr;
-
-    // TO DO: immagino ci debba essere scritto questo
     return s;
 }
 
