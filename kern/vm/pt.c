@@ -95,10 +95,13 @@ void pt_map(paddr_t p, vaddr_t v){
 
 
     /* PAGE NUMBER */
+    
     int i = (int) v/PAGE_SIZE;
+    /* TO DO : Debug
     if(i>PT_SIZE){
         return;
     }
+    */
 
     spinlock_acquire(&free_pt);
     pt[i].paddr=p;
@@ -152,11 +155,12 @@ paddr_t pt_translate(vaddr_t v){
     /* PAGE NUMBER */
     int i = (int) (v/PAGE_SIZE);
     
+    /* TO DO: Hhmmmmm...
     if (i>PT_SIZE){
         pt_fault(NULL, INVALID_MAP);
     }
-    
-    
+    */
+
     spinlock_acquire(&free_pt);
     /* frame number */
     p = pt[i].paddr;

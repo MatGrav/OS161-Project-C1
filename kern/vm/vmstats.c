@@ -39,7 +39,7 @@ void vmstats_print(){
     spinlock_release(&vmstats_lock);
 
 
-    kprintf("Printing vm stats:\n");
+    kprintf("\n\nPrinting vm stats:\n");
     if(curstats[TLB_FAULTS] != (curstats[TLB_FAULTS_FREE] + curstats[TLB_FAULTS_REPLACE])){
         kprintf("[WARNING: TLB_FAULTS is not equal to TLB_FAULT_FREE + TLB_FAULTS_REPLACE]\n");
     };
@@ -63,6 +63,7 @@ void vmstats_print(){
     if(curstats[TLB_FAULTS] != (curstats[PAGE_FAULTS_DISK] + curstats[PAGE_FAULTS_SWAPFILE] + curstats[PAGE_FAULTS_ELF])){
         kprintf("\n[WARNING: Page Faults (Disk) is not equal to Page Faults from Swapfile + Page Faults from ELF]\n");
     };
+    kprintf("\n\n");
 }
 
 int vmstats_increase(unsigned int stat){

@@ -50,7 +50,7 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	int spl;
 
 	/* TO DO : WARNING: JUst for debug, don't think this is ok*/
-	if(faultaddress >= 4194704) { faultaddress = 4194704;}
+	//if(faultaddress >= 4194704) { faultaddress = 4194704;}
 
 	faultaddress &= PAGE_FRAME;
 
