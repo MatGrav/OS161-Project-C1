@@ -8,6 +8,7 @@
 #include <addrspace.h>
 #include <novavm.h>
 #include <coremap.h>
+#include <pt.h>
 
 
 static struct spinlock stealmem_lock = SPINLOCK_INITIALIZER;
@@ -230,6 +231,7 @@ static int freeppages(paddr_t addr, unsigned long npages){
     cmap->entry[i].status = FREE;
     cmap->entry[i].consec_pages = 0;
     kprintf("DEbug: CLeaning a page\n");
+    /*Aggiungere alla lista dei np*/
   }
   spinlock_release(&coremap_lock);
 
@@ -268,7 +270,7 @@ void free_kpages(vaddr_t addr){
   }
 }
 
-vaddr_t
+paddr_t
 alloc_upage(){
 
   paddr_t pa;
@@ -278,7 +280,12 @@ alloc_upage(){
 	if (pa==0) {
 		return 0;
 	}
-  //pt_map?
-	return PADDR_TO_KVADDR(pa);
+	return pa;
 
+}
+
+void free_upage(paddr_t paddr){
+  if (isCoremapActive()) {
+    freeppages(paddr, 1);
+  }
 }

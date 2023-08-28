@@ -91,7 +91,7 @@ void pt_map(paddr_t p, vaddr_t v){
     KASSERT(v!=0);
 
     /* To be sure it is aligned */
-    p |= PAGE_FRAME;
+    p &= PAGE_FRAME;
 
 
     /* PAGE NUMBER */
@@ -123,17 +123,22 @@ void pt_fault(struct pt_entry* pt_e, uint32_t faulttype){
         {
         /* Wr're trying to access to a not mapped page */
         /* Let's update it in memory and so in page table */
-        vaddr_t v = alloc_upage();
 
-        if(v==0){
+        paddr_t p = alloc_upage();
+
+        if(p==0){
             /* there's not enough space -> substitute */
-            i = pt_fifo();
-            v = i*PAGE_SIZE;
-            pt_map(pt_e->paddr, v);
+
+            
+            i = pt_fifo(); //Liberazione nella pt
+            free_upage(pt[i].paddr); //Liberazione nella "coremap"
+            p = alloc_upage();         
+            //pt_map(pt_e->paddr, v);
         } else {
-            /* there's enough free space*/
-            pt_map(pt_e->paddr, v);
+            
         }
+        pt_e->paddr = p;
+
 
         }
         break;
@@ -146,9 +151,8 @@ paddr_t pt_translate(vaddr_t v){
     paddr_t p; /* physical address of the frame (frame number) */
     /* PAGE NUMBER */
     int i = (int) (v/PAGE_SIZE);
-    int s = get_nRamFrames();
-    int t = PT_SIZE;
-    if (i>t){
+    
+    if (i>PT_SIZE){
         pt_fault(NULL, INVALID_MAP);
     }
     
@@ -160,6 +164,9 @@ paddr_t pt_translate(vaddr_t v){
     if(pt[i].status == ABSENT){
         /* There's not a corresponding frame */
         pt_fault(&pt[i], NOT_MAPPED);
+        /* Dopo questa istruzione, in pt[i] c'è l'indirizzo fisico cui posso scrivere*/
+        pt_map(pt[i].paddr,v);
+
         spinlock_acquire(&free_pt);
         p=pt[i].paddr;
         spinlock_release(&free_pt);
@@ -167,8 +174,6 @@ paddr_t pt_translate(vaddr_t v){
     /* physical address to return */
     p |= (v & DISPLACEMENT_MASK);
 
-    (void)s;
-    (void)t;
     return p;
 }
 
