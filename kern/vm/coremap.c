@@ -113,7 +113,6 @@ unsigned long get_np_sz(){
   return sz;
 }
 
-/* Should never be called?*/
 void coremap_cleanup(){
     unsigned int i;
     for (i=0;i<nRamFrames; i++){
@@ -256,8 +255,10 @@ void free_kpages(vaddr_t addr){
     paddr_t paddr;
     //TO DO I think: Substitute the code with one asking page table the phys address
     paddr = addr - MIPS_KSEG0;
-    // paddr = pt_something(addr)
-    
+    /* If paddr is in overflow -> it is an user address */
+    if(paddr >= cmap->size * PAGE_SIZE){
+      paddr=pt_translate(addr);
+    }
     long first = paddr/PAGE_SIZE;	
     KASSERT(cmap->entry!=NULL);
     KASSERT(cmap->size > (unsigned) first);
@@ -284,7 +285,8 @@ alloc_upage(){
 
 }
 
-void free_upage(paddr_t paddr){
+void
+free_upage(paddr_t paddr){
   if (isCoremapActive()) {
     freeppages(paddr, 1);
   }

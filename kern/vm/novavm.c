@@ -93,13 +93,6 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 		return EFAULT;
 	}
 
-	/* Assert that the address space has been set up properly. */
-	/* TO DO
-	
-	 |
-	 |
-	 v
-	 */
 	KASSERT(as->code  != NULL);
 	KASSERT(as->data  != NULL);
 	KASSERT(as->stack != NULL);
@@ -114,33 +107,6 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	if(paddr == 0){
 		return EFAULT;
 	}
-
-	/* 
-	SHOULD BE ERASED?
-
-	vbase1 = as->code.vaddr;
-	vtop1 = vbase1 + as->as_npage * PAGE_SIZE;
-
-	vbase2 = as->as_vbase2;
-	vtop2 = vbase2 + as->as_npages2 * PAGE_SIZE;
-	stackbase = USERSTACK - DUMBVM_STACKPAGES * PAGE_SIZE;
-	stacktop = USERSTACK;
-
-	if (faultaddress >= vbase1 && faultaddress < vtop1) {
-		paddr = (faultaddress - vbase1) + pt_get_page(as->code.vaddr);
-	}
-
-	else if (faultaddress >= vbase2 && faultaddress < vtop2) {
-		paddr = (faultaddress - vbase2) + buhybkkbhhb(as->data.vaddr);
-	}
-	else if (faultaddress >= stackbase && faultaddress < stacktop) {
-		paddr = (faultaddress - stackbase) + pt_get_page(as->stack.vaddr);
-	}
-	else {
-		return EFAULT;
-	}
-	*/
-
 
 	/* make sure it's page-aligned */
 	KASSERT((paddr & PAGE_FRAME) == paddr);
@@ -177,7 +143,9 @@ void vm_tlbshootdown(const struct tlbshootdown *ts){
 }
 
 void vm_shutdown(){
-
+	
+	swap_clean_up();
+	coremap_cleanup();
 	vmstats_print();
 }
 

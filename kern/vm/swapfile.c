@@ -11,8 +11,7 @@
 #include <uio.h>
 #include <vnode.h>
 #include <spinlock.h>
-
-
+#include <kern/errno.h>
 
 
 static struct vnode* swapfile = NULL;
@@ -110,7 +109,8 @@ paddr_t swap_out(paddr_t paddr){
     if(bitmap[index]==SF_PRESENT) {
         VOP_READ(swapfile, &ku);
     } else {
-        return -1;
+        spinlock_release(&swap_free);
+        return EINVAL;
     }
     spinlock_release(&swap_free);
 

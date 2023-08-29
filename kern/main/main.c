@@ -52,8 +52,7 @@
 #include "autoconf.h"  // for pseudoconfig
 
 #include "hello.h"
-#include <vmstats.h>
-//#include <novavm.h>
+#include <novavm.h>
 //#include <coremap.h>
 
 
@@ -158,8 +157,8 @@ shutdown(void)
 	vfs_clearbootfs();
 	vfs_clearcurdir();
 	vfs_unmountall();
-	vmstats_print();
 	thread_shutdown();
+	vm_shutdown();
 
 	splhigh();
 }

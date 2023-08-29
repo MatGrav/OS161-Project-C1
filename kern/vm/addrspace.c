@@ -129,11 +129,11 @@ void
 as_destroy(struct addrspace *as)
 {
 	novavm_can_sleep();
-
+	
 	free_kpages(as->code->vaddr);
 	free_kpages(as->data->vaddr);
 	free_kpages(as->stack->vaddr);
-
+	
 	segment_destroy(as->code);
 	segment_destroy(as->data);
 	segment_destroy(as->stack);

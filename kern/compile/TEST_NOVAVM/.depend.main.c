@@ -13,4 +13,4 @@ main.o: ../../main/main.c ../../include/types.h \
  ../../include/vm.h includelinks/machine/vm.h ../../include/mainbus.h \
  ../../include/vfs.h ../../include/device.h ../../include/syscall.h \
  opt-syscalls.h opt-fork.h ../../include/test.h ../../include/version.h \
- autoconf.h ../../include/hello.h ../../include/vmstats.h
+ autoconf.h ../../include/hello.h ../../include/novavm.h

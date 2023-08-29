@@ -130,18 +130,15 @@ void pt_fault(struct pt_entry* pt_e, uint32_t faulttype){
         paddr_t p = alloc_upage();
 
         if(p==0){
-            /* there's not enough space -> substitute */
-
-            
+            /* there's not enough space -> substitute */    
             i = pt_fifo(); //Liberazione nella pt
             free_upage(pt[i].paddr); //Liberazione nella "coremap"
             p = alloc_upage();         
             //pt_map(pt_e->paddr, v);
-        } else {
-            
         }
-        pt_e->paddr = p;
 
+        /* Remember: p must be mapped -> look at pt_translate() */
+        pt_e->paddr = p;
 
         }
         break;
@@ -177,7 +174,7 @@ paddr_t pt_translate(vaddr_t v){
         spinlock_release(&free_pt);
     }
     /* physical address to return */
-    p |= (v & DISPLACEMENT_MASK);
+    //p |= (v & DISPLACEMENT_MASK);
 
     return p;
 }
