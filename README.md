@@ -200,4 +200,5 @@ Da fare:
 4- Far funzionare veramente i programmi user
 5- Fare in modo che premendo q nel menu si stampino le vmstats
 6- Gestire i permessi di ogni pagina o segmento
-
+7- Mettere gli #if OPT_NOVAVM
+8- controllare se funziona lo swapfile (se scrive le pagine e le toglie)
