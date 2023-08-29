@@ -199,4 +199,5 @@ Da fare:
 3- Completare load_elf (fatto ma fare check insieme su dimensioni segmento e pagina)
 4- Far funzionare veramente i programmi user
 5- Fare in modo che premendo q nel menu si stampino le vmstats
+6- Gestire i permessi di ogni pagina o segmento
 
