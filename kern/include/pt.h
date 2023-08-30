@@ -7,8 +7,6 @@
 #include <coremap.h>
 
 
-// TO DO : sOlve this problem
-//The following thing does not compile
 #define PT_SIZE get_nRamFrames()
 
 
@@ -23,11 +21,6 @@ struct pt_entry{
     paddr_t paddr; /* physical address */
     uint32_t status; /* Present or absent */
     uint32_t protection; /* read-only, write, read-write*/
-    /*
-    uint32_t modified;
-    uint32_t referenced;
-    uint32_t caching_disabled;
-    */
 };
 
 /* Values of status */

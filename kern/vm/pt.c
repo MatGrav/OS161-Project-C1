@@ -1,15 +1,3 @@
-/*#include <types.h>
-#include <kern/errno.h>
-#include <lib.h>
-#include <spl.h>
-#include <cpu.h>
-#include <spinlock.h>
-#include <proc.h>
-#include <current.h>
-#include <mips/tlb.h>
-#include <addrspace.h>
-#include <vm.h>*/
-
 #include <types.h>
 #include <lib.h>
 #include <vm.h>
@@ -48,7 +36,8 @@ void pt_init(){
 }
 
 /* Pop on queue_fifo */
-static unsigned int pt_fifo() {
+/* Push on queue_fifo is done in pt_map */
+static unsigned int pt_queue_fifo_pop() {
     KASSERT(queue_front != queue_rear);
 
     /* index of old page to pop */
@@ -93,10 +82,9 @@ void pt_map(paddr_t p, vaddr_t v){
     /* To be sure it is aligned */
     p &= PAGE_FRAME;
 
-
     /* PAGE NUMBER */
-    
     int i = (int) v/PAGE_SIZE;
+
     /* TO DO : Debug
     if(i>PT_SIZE){
         return;
@@ -110,10 +98,13 @@ void pt_map(paddr_t p, vaddr_t v){
     }
     pt[i].protection=PT_E_RW;
     
-    /* Push on queue_fifo */
+    /* Push on queue_fifo and check on swapfile */
+    paddr_t res = pt_swap_pop(&pt[i]); /* pop on swapfile if paddr is written there */
     queue_fifo[queue_rear] = i; /* we write the index of page table */
     queue_rear = (queue_rear + 1) % PT_SIZE;  /* update of rear */
     spinlock_release(&free_pt);
+
+    (void)res;
 }
 
 void pt_fault(struct pt_entry* pt_e, uint32_t faulttype){
@@ -126,15 +117,14 @@ void pt_fault(struct pt_entry* pt_e, uint32_t faulttype){
         {
         /* Wr're trying to access to a not mapped page */
         /* Let's update it in memory and so in page table */
-
+        
         paddr_t p = alloc_upage();
 
         if(p==0){
             /* there's not enough space -> substitute */    
-            i = pt_fifo(); //Liberazione nella pt
+            i = pt_queue_fifo_pop(); //Liberazione nella pt
             free_upage(pt[i].paddr); //Liberazione nella "coremap"
-            p = alloc_upage();         
-            //pt_map(pt_e->paddr, v);
+            p=alloc_upage(); /* new address -> later, look if it is written in swapfile*/
         }
 
         /* Remember: p must be mapped -> look at pt_translate() */
@@ -187,9 +177,6 @@ paddr_t pt_swap_pop(struct pt_entry* pt_e){
     paddr_t res;
 
     res=swap_out(pt_e->paddr);
-    if(res){
-        //perror("pt_swap_pop: unable to pop paddr 0x%d from swapfile\n", pt_e->paddr);
-    }
 
     return res;
 }

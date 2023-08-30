@@ -174,33 +174,6 @@ getfreeppages(unsigned long npages) {
   return addr;
 }
 
-
-#if 0 
-static int
-getfreeppages(unsigned long npages, paddr_t addr[]) {
-  unsigned long found = (long) 0;
-
-  if (!isCoremapActive()) return 0; 
-  spinlock_acquire(&coremap_lock);
-
-  for(found=0;found<npages;found++){
-
-    if(cmap->np_sz > 0){
-        addr[found] = cmap->np[cmap->np_head]->frame_addr;
-        cmap->np[cmap->np_head]->status = OCCUPIED;
-        rem_head();
-        found++;
-    } else {
-        // SOSTITUZIONE
-        // Vedere cosa succede per la page table quando sarà implementata
-        // Ricordiamoci di mettere anche in questo caso lo status OCCUPIED
-    }
-  }
-
-  return (int) found;
-}
-#endif
-
 static paddr_t getppages(unsigned long npages){
   paddr_t addr;
 

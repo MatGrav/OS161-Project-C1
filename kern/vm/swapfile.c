@@ -108,6 +108,7 @@ paddr_t swap_out(paddr_t paddr){
     spinlock_acquire(&swap_free);
     if(bitmap[index]==SF_PRESENT) {
         VOP_READ(swapfile, &ku);
+        bitmap[index]=SF_ABSENT;
     } else {
         spinlock_release(&swap_free);
         return EINVAL;
