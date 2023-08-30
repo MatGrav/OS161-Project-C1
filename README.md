@@ -94,7 +94,7 @@ Se la page table teoricamente riesce a coprire qualsiasi traduzione logico-fisic
 ## SWAPFILE
 Il progetto ci richiede di scrivere su un file chiamato SWAPFILE le pagine che vanno scritte in memoria. Creiamo dunque dei file di supporto, swapfile.h e swapfile.c, nei quali scriviamo il codice per implementare tale logica.
 Per quanto riguarda la lettura e scrittura, anziché usare le classiche fread e fwrite, che sarebbero andate anche bene e che avrebbero garantito una maggiore portabilità (almeno di questo modulo), sfruttiamo le tipiche funzioni forniteci dall'interfaccia di OS161: VOP_READ e VOP_WRITE. Queste due funzioni (che tra l'altro possono chiamare una read o write virtuali o non, in base alla configurazione) lavorano su una struct vnode (FCB) che ho definito come variabile globale.
-Lo swapfile dunque viene inizializzato nella swap_init con vfs_open che, nel modo in cui è stato scritto, ci dà i permessi di lettura e scrittura sul file, lo apre e se grazie a O_CREAT se non è stato ancora creato lo crea.
+Lo swapfile dunque viene inizializzato nella swap_init con vfs_open che, nel modo in cui è stato scritto, ci dà i permessi di lettura e scrittura sul file, lo apre e grazie a O_CREAT se non è stato ancora creato lo crea.
 
 Nelle funzioni swap_in (da cambiare forse in swap_push) e swap_out bisogna inizializzare le due classiche struct iovec e uio.
 Successivamente, si fa la chiamata a VOP_WRITE o VOP_READ per la scrittura o lettura sul file.
@@ -103,6 +103,12 @@ Dopo una swap_out, allora significa che l'iesimo indirizzo scritto sullo swapfil
 Sfrutto due macro definite in swapfile.h che sono SF_ABSENT=0 e SF_PRESENT=1;
 
 Nelle operazioni di lettura e scrittura, visto che stiamo usando anche una bitmap, ho introdotto uno spinlock per essere sicuri di stare leggendo una entry valida o non valida, per non avere race conditions.
+
+La logica è la seguente:
+Viene chiamata la pt_fault con faulttype==NOT_MAPPED;
+La prima cosa che si fa è verificare se c'è spazio libero con p=alloc_upage();
+-> Se p!=0 allora c'è spazio libero e si alloca normalmente, con una conseguente mappatura.
+-> Se p==0 allora NON c'è spazio libero, c'è bisogno di sostituire. Si calcola con pt_fifo e la queue_fifo le pagine da eliminare. Poi, una volta liberato lo spazio di quella pagina facendo lo SWAP IN della pagina nello swapfile
 
 Per quanto riguarda la dimensione, che deve essere fissata a 9MB, facciamo ancora uso delle funzioni che ci fornisce l'interfaccia di OS161 e chiamiamo la VOP_TRUNCATE. Di seguito chat gpt ci spiega a cosa serve:
 
@@ -199,6 +205,6 @@ Da fare:
 3- Completare load_elf (fatto ma fare check insieme su dimensioni segmento e pagina)
 4- Far funzionare veramente i programmi user
 5- Fare in modo che premendo q nel menu si stampino le vmstats
-6- Gestire i permessi di ogni pagina o segmento
+6- Gestire i permessi di ogni pagina o segmento (davvero ci servono?)
 7- Mettere gli #if OPT_NOVAVM
 8- controllare se funziona lo swapfile (se scrive le pagine e le toglie)
