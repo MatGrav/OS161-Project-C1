@@ -20,15 +20,22 @@ unsigned int* queue_fifo = NULL;
 static unsigned int queue_front = 0;
 static unsigned int queue_rear = 0;
 
+#define PROVA "ciao"
+
 void pt_init(){
-    int i;
+    unsigned long i;
     pt = (struct pt_entry*) kmalloc(sizeof(struct pt_entry)*PT_SIZE);
     if (pt==NULL){
         return;
     }
     pt_clean_up();
 
-    queue_fifo = kmalloc(sizeof(unsigned int)*PT_SIZE);
+    queue_fifo = kmalloc(sizeof(uint8_t)*PT_SIZE);
+    // TO DO: Clean
+    kprintf("Entry%d\nPAddr%d\nstatus%d\n",sizeof(struct pt_entry),sizeof(paddr_t),sizeof(uint8_t));
+    kprintf("Dim page table %d\n",sizeof(struct pt_entry)*PT_SIZE);
+    kprintf("Size of queue fifo %d\n",sizeof(unsigned int)*PT_SIZE);
+    kprintf("Size of ptsize %d\n",PT_SIZE);
 
     for (i=0; i<PT_SIZE; i++){
         queue_fifo[i]=0;
@@ -52,7 +59,7 @@ static unsigned int pt_queue_fifo_pop() {
 
 /* L'ho scritto in una funzione a parte perché potrebbe tornarci utile per azzerare la pt*/
 void pt_clean_up(){
-    int i;
+    unsigned long i;
     for (i=0; i<PT_SIZE; i++){
         pt[i].paddr=0;
         pt[i].status=ABSENT;

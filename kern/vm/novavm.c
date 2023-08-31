@@ -21,6 +21,11 @@
 /* Initialization function */
 void vm_bootstrap(void){
 	coremap_init();
+	int availableRam = get_nRamFrames() * 4096;
+	if (availableRam <= 7*1024*1024){
+		kprintf("Not enough RAM: ending...\n");
+		return;
+	}
 	pt_init();
 	swap_init();
 	vmstats_init();
@@ -113,6 +118,7 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 
 	/* Disable interrupts on this CPU while frobbing the TLB. */
 	spl = splhigh();
+	
 
 	for (i=0; i<NUM_TLB; i++) {
 		tlb_read(&ehi, &elo, i);
@@ -130,6 +136,8 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 
 	/* At this point dumbvm, running out of entries, couldn't handle pf
 	returning EFAULT*/
+	ehi = faultaddress;
+	elo = paddr | TLBLO_DIRTY | TLBLO_VALID;
 	tlb_write(ehi,elo,tlb_get_rr_victim());
 	vmstats_increase_2(TLB_FAULTS,TLB_FAULTS_REPLACE);
 	splx(spl);

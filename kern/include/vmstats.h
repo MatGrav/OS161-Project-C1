@@ -43,6 +43,7 @@ times the entire TLB is invalidated NOT the number of TLB entries invalidated)  
 #define SWAPFILE_WRITES 9
 
 /* The sum of “TLB Faults with Free” and “TLB Faults with Replace” should be equal to “TLB Faults.
+
 The sum of “TLB Reloads,” “Page Faults (Disk),” and “Page Faults (Zeroed)” should be equal to “TLB Faults.” 
 
 So this means that you should not count TLB faults that do not get handled (i.e., result in the program being killed).

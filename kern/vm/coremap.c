@@ -102,7 +102,8 @@ void coremap_init(){
 
   spinlock_acquire(&coremap_lock);
   coremapActive = 1;
-  spinlock_release(&coremap_lock);    
+  spinlock_release(&coremap_lock);  
+  //kprintf("%d\n",get_nRamFrames());  
 }
 
 unsigned long get_np_sz(){
@@ -229,9 +230,14 @@ void free_kpages(vaddr_t addr){
     //TO DO I think: Substitute the code with one asking page table the phys address
     paddr = addr - MIPS_KSEG0;
     /* If paddr is in overflow -> it is an user address */
-    if(paddr >= cmap->size * PAGE_SIZE){
+    /*if(paddr >= cmap->size * PAGE_SIZE){
       paddr=pt_translate(addr);
+    }*/
+    
+    if(addr <= 0x7FFFFFFF){
+      paddr = pt_translate(addr);
     }
+  
     long first = paddr/PAGE_SIZE;	
     KASSERT(cmap->entry!=NULL);
     KASSERT(cmap->size > (unsigned) first);

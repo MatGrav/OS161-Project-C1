@@ -13,6 +13,8 @@
 #include <spinlock.h>
 #include <kern/errno.h>
 
+#include <vmstats.h>
+
 
 static struct vnode* swapfile = NULL;
 static unsigned int* bitmap = NULL; 
@@ -81,6 +83,7 @@ void swap_in(paddr_t paddr){
         bitmap[index]=SF_PRESENT;
     }
     spinlock_release(&swap_free);
+    vmstats_increase(PAGE_FAULTS_SWAPFILE);
     
 }
 
@@ -114,6 +117,8 @@ paddr_t swap_out(paddr_t paddr){
         return EINVAL;
     }
     spinlock_release(&swap_free);
+    vmstats_increase(SWAPFILE_WRITES);
+
 
     return paddr;
 
