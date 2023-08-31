@@ -48,9 +48,6 @@
 #include <mips/tlb.h>
 
 
-
-
-
 /*
  * Note! If OPT_DUMBVM is set, as is the case until you start the VM
  * assignment, this file is not compiled or linked or in any way
@@ -100,26 +97,6 @@ as_copy(struct addrspace *old, struct addrspace **ret)
 		as_destroy(newas);
 		return ENOMEM;
 	}
-
-	// TO DO
-	//KASSERT(pt_get_page(newas->code->vaddr) != 0);
-	//KASSERT(pt_get_page(newas->data->vaddr) != 0);
-	//KASSERT(pt_get_page(newas->stack->vaddr) != 0);
-
-	/*
-	???????????????????????????
-	memmove((void *)PADDR_TO_KVADDR(new->as_pbase1),
-		(const void *)PADDR_TO_KVADDR(old->as_pbase1),
-		old->as_npages1*PAGE_SIZE);
-
-	memmove((void *)PADDR_TO_KVADDR(new->as_pbase2),
-		(const void *)PADDR_TO_KVADDR(old->as_pbase2),
-		old->as_npages2*PAGE_SIZE);
-
-	memmove((void *)PADDR_TO_KVADDR(new->as_stackpbase),
-		(const void *)PADDR_TO_KVADDR(old->as_stackpbase),
-		DUMBVM_STACKPAGES*PAGE_SIZE);
-	*/
 
 	*ret = newas;
 	return 0;

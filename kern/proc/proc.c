@@ -48,6 +48,7 @@
 #include <current.h>
 #include <addrspace.h>
 #include <vnode.h>
+#include <syscall.h>
 
 #if OPT_WAITPID
 #include <synch.h>
@@ -179,7 +180,9 @@ proc_create(const char *name)
 	proc->p_cwd = NULL;
 
 	proc_init_waitpid(proc,name);
-
+#if OPT_FILE
+        bzero(proc->fileTable,OPEN_MAX*sizeof(struct openfile *));
+#endif
 	return proc;
 }
 
@@ -455,3 +458,31 @@ proc_wait(struct proc *proc)
 #endif
 }
 
+
+/* G.Cabodi - 2019 - support for waitpid */
+void
+proc_signal_end(struct proc *proc)
+{
+#if USE_SEMAPHORE_FOR_WAITPID
+      V(proc->p_sem);
+#else
+      lock_acquire(proc->p_lock);
+      cv_signal(proc->p_cv);
+      lock_release(proc->p_lock);
+#endif
+}
+
+#if OPT_FILE
+void 
+proc_file_table_copy(struct proc *psrc, struct proc *pdest) {
+  int fd;
+  for (fd=0; fd<OPEN_MAX; fd++) {
+    struct openfile *of = psrc->fileTable[fd];
+    pdest->fileTable[fd] = of;
+    if (of != NULL) {
+      /* incr reference count */
+      openfileIncrRefCount(of);
+    }
+  }
+}
+#endif

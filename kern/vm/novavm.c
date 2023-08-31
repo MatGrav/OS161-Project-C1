@@ -42,15 +42,11 @@ novavm_can_sleep(void)
 int
 vm_fault(int faulttype, vaddr_t faultaddress)
 {
-	//vaddr_t vbase1, vtop1, vbase2, vtop2, stackbase, stacktop;
 	paddr_t paddr = 0;
 	int i;
 	uint32_t ehi, elo;
 	struct addrspace *as;
 	int spl;
-
-	/* TO DO : WARNING: JUst for debug, don't think this is ok*/
-	//if(faultaddress >= 4194704) { faultaddress = 4194704;}
 
 	faultaddress &= PAGE_FRAME;
 

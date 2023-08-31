@@ -200,11 +200,17 @@ La TLB comunica con la page table principalmente nei seguenti casi:
 Da fare:
 1- Controllare tutti i commenti TO DO nel codice
 1.1- Rimuovere tutte le include commentate
-2- Completare addrspace (fatto)
-2.1 - Capire cosa fare con seg stack -> definire funzioni apposite per la creazione, inizializzazione e allocazione
-3- Completare load_elf (fatto ma fare check insieme su dimensioni segmento e pagina)
-4- Far funzionare veramente i programmi user
-5- Fare in modo che premendo q nel menu si stampino le vmstats
+
+5- Controllare rem_head() e rem_qualcosaltro in coremap.c
 6- Gestire i permessi di ogni pagina o segmento (davvero ci servono?)
 7- Mettere gli #if OPT_NOVAVM
 8- controllare se funziona lo swapfile (se scrive le pagine e le toglie)
+9- Funzionerebbe con 4MB di RAM ma l'introduzione dei file di lab5 richiedono il passaggio a 8MB
+DANILO:
+10- Rivedere page table (cose)
+11- Swapfile di nuovo porcoddue(non ho voglia di rivedere stammerda)
+12- Come funziona la queue_fifo
+13- Hashing per ricerca nella pt_search
+13.5- Aggiungere KASSERT dove vanno
+
+14- Rivedere le stats che ancora non funzionano

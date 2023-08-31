@@ -5,4 +5,4 @@ pt.o: ../../vm/pt.c ../../include/types.h ../../include/kern/types.h \
  ../../include/addrspace.h opt-dumbvm.h opt-novavm.h \
  ../../include/spinlock.h ../../include/hangman.h opt-hangman.h \
  includelinks/machine/spinlock.h ../../include/swapfile.h \
- ../../include/pt.h
+ ../../include/novavm.h ../../include/pt.h

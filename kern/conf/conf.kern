@@ -381,6 +381,8 @@ file      vfs/vfslookup.c
 file      vfs/vfspath.c
 file      vfs/vnode.c
 
+defoption file
+
 #
 # VFS devices
 #

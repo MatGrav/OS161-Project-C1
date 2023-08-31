@@ -6,10 +6,7 @@
 
 #include <coremap.h>
 
-// TO DO: uhmm check?
 #define PT_SIZE get_nRamFrames()
-//#define PT_SIZE 512*1024U //IN MIPS virtual addrspace, addresses from 0 to 0x7FFFFFF (2GB) are kuseg
-
 
 /* Mask to obtain the displacement from a virtual address */
 #define DISPLACEMENT_MASK 0xFFF
@@ -20,13 +17,6 @@
 
 #define PRINT_IPT_DIM 1
 
-/*
-struct pt_entry{
-    vaddr_t vaddr; 
-    paddr_t paddr; // physical address, redundancy as (paddr of i_th entry == i_th*PAGE_SIZE) 
-    uint8_t status; // Present or absent 
-    uint8_t protection; // read-only, write, read-write
-}; */
 
 struct pt_entry {
     vaddr_t vaddr; /* virtual address*/

@@ -23,6 +23,30 @@ static unsigned int queue_front = 0;
 static unsigned int queue_rear = 0;
 
 
+/* Returns index where virtual address is, found is to be checked after calling */
+static unsigned int pt_search(vaddr_t v, bool* found){
+    *found = false;
+    spinlock_acquire(&free_pt);
+
+
+    /* TO DO: Add Hashing*/
+
+
+    /* Se ci sono collisioni o altro */
+    unsigned int i;
+
+    for(i=0;i<PT_SIZE;i++){
+        if(pt[i].vaddr == v){
+            *found = true;
+            break;
+        }
+    }
+
+    spinlock_release(&free_pt);
+    return i;
+}
+
+
 void pt_init(){
     pt = (struct pt_entry*) kmalloc(sizeof(struct pt_entry)*PT_SIZE);
     if (pt==NULL){
@@ -64,6 +88,7 @@ static unsigned int pt_queue_fifo_pop() {
 void pt_clean_up(){
     unsigned long i;
     for (i=0; i<PT_SIZE; i++){
+        pt[i].vaddr = 0;
         //pt[i].paddr=i*PAGE_SIZE;
         pt[i].status=ABSENT;
         pt[i].protection=PT_E_RW;
@@ -71,6 +96,7 @@ void pt_clean_up(){
 }
 
 void pt_page_free(unsigned int i){
+    pt[i].vaddr = 0;
     //pt[i].paddr=0;
     pt[i].status=ABSENT;
     pt[i].protection=PT_E_RW;
@@ -151,20 +177,17 @@ paddr_t pt_translate(vaddr_t v){
     paddr_t p; /* physical address of the frame (frame number) */
     
     unsigned i;
-    bool found = false;
+    
 
     /* Alignment of virtual address to page */
     v &= PAGE_FRAME;
+    if(v >= USERSTACK){
+        pt_fault(INVALID_MAP);
+    }
 
     /* Search of the virtual address inside the IPT */
-    spinlock_acquire(&free_pt);
-    for(i=0;i<PT_SIZE;i++){
-        if(pt[i].vaddr == v){
-            found = true;
-            break;
-        }
-    }
-    spinlock_release(&free_pt);
+    bool found = false;
+    i = pt_search(v,&found);
 
     if(found){
         p = PAGE_SIZE*i;

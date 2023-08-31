@@ -204,7 +204,7 @@ static int freeppages(paddr_t addr, unsigned long npages){
     cmap->entry[i].status = FREE;
     cmap->entry[i].consec_pages = 0;
     kprintf("DEbug: CLeaning a page\n");
-    /*Aggiungere alla lista dei np*/
+    /* TO DOAggiungere alla lista dei np*/
   }
   spinlock_release(&coremap_lock);
 
@@ -227,15 +227,12 @@ alloc_kpages(unsigned npages)
 void free_kpages(vaddr_t addr){
   if (isCoremapActive()) {
     paddr_t paddr;
-    //TO DO I think: Substitute the code with one asking page table the phys address
-    paddr = addr - MIPS_KSEG0;
-    /* If paddr is in overflow -> it is an user address */
-    /*if(paddr >= cmap->size * PAGE_SIZE){
-      paddr=pt_translate(addr);
-    }*/
     
-    if(addr <= 0x7FFFFFFF){
+    /* If it is user address, ask page table */
+    if(addr < MIPS_KSEG0){
       paddr = pt_translate(addr);
+    } else {
+      paddr = addr - MIPS_KSEG0;
     }
   
     long first = paddr/PAGE_SIZE;	

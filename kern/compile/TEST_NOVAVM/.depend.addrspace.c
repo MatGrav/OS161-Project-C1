@@ -5,6 +5,7 @@ addrspace.o: ../../vm/addrspace.c ../../include/types.h \
  ../../include/addrspace.h ../../include/vm.h includelinks/machine/vm.h \
  opt-dumbvm.h opt-novavm.h ../../include/proc.h ../../include/spinlock.h \
  ../../include/hangman.h opt-hangman.h includelinks/machine/spinlock.h \
- opt-waitpid.h ../../include/segment.h ../../include/novavm.h \
+ ../../include/limits.h ../../include/kern/limits.h opt-waitpid.h \
+ opt-file.h ../../include/segment.h ../../include/novavm.h \
  ../../include/coremap.h ../../include/pt.h ../../include/vmstats.h \
  ../../include/spl.h includelinks/mips/tlb.h
