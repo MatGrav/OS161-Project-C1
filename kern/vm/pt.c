@@ -5,12 +5,14 @@
 #include <spinlock.h>
 #include <swapfile.h>
 
+#include <novavm.h>
+#include <machine/vm.h>
+
 #include "pt.h"
 
 struct spinlock free_pt = SPINLOCK_INITIALIZER;
 
 /* Page Table */
-// TO DO: check 
 struct pt_entry* pt = NULL;
 
 /* **Queue for FIFO support** */
@@ -20,10 +22,8 @@ unsigned int* queue_fifo = NULL;
 static unsigned int queue_front = 0;
 static unsigned int queue_rear = 0;
 
-#define PROVA "ciao"
 
 void pt_init(){
-    unsigned long i;
     pt = (struct pt_entry*) kmalloc(sizeof(struct pt_entry)*PT_SIZE);
     if (pt==NULL){
         return;
@@ -31,13 +31,16 @@ void pt_init(){
     pt_clean_up();
 
     queue_fifo = kmalloc(sizeof(uint8_t)*PT_SIZE);
-    // TO DO: Clean
-    kprintf("Entry%d\nPAddr%d\nstatus%d\n",sizeof(struct pt_entry),sizeof(paddr_t),sizeof(uint8_t));
-    kprintf("Dim page table %d\n",sizeof(struct pt_entry)*PT_SIZE);
-    kprintf("Size of queue fifo %d\n",sizeof(unsigned int)*PT_SIZE);
-    kprintf("Size of ptsize %d\n",PT_SIZE);
+    if (queue_fifo==NULL){  return;  }
 
-    for (i=0; i<PT_SIZE; i++){
+#if PRINT_IPT_DIM
+    kprintf("Dimension of a single IPT entry: %d B\n",sizeof(struct pt_entry));
+    kprintf("Current PT_SIZE: %d (# of frames/pages)\n",PT_SIZE);
+    kprintf("Dimension of page table %d KB \n",(sizeof(struct pt_entry)*PT_SIZE)/1024);
+    kprintf("Size of queue fifo %d KB \n\n",(sizeof(unsigned int)*PT_SIZE)/1024);
+#endif
+
+    for (unsigned long i=0; i<PT_SIZE; i++){
         queue_fifo[i]=0;
     }
 }
@@ -61,14 +64,14 @@ static unsigned int pt_queue_fifo_pop() {
 void pt_clean_up(){
     unsigned long i;
     for (i=0; i<PT_SIZE; i++){
-        pt[i].paddr=0;
+        //pt[i].paddr=i*PAGE_SIZE;
         pt[i].status=ABSENT;
         pt[i].protection=PT_E_RW;
     }
 }
 
 void pt_page_free(unsigned int i){
-    pt[i].paddr=0;
+    //pt[i].paddr=0;
     pt[i].status=ABSENT;
     pt[i].protection=PT_E_RW;
 }
@@ -88,24 +91,23 @@ void pt_map(paddr_t p, vaddr_t v){
 
     /* To be sure it is aligned */
     p &= PAGE_FRAME;
+    v &= PAGE_FRAME;
 
-    /* PAGE NUMBER */
-    int i = (int) v/PAGE_SIZE;
-
-    /* TO DO : Debug
-    if(i>PT_SIZE){
-        return;
-    }
-    */
+    /* Index in IPT based on physical address p */
+    int i = (int) p/PAGE_SIZE;
 
     spinlock_acquire(&free_pt);
-    pt[i].paddr=p;
+    pt[i].vaddr=v;
+    //pt[i].pid = something;
     if(pt[i].status==ABSENT){
         pt[i].status=PRESENT;
     }
     pt[i].protection=PT_E_RW;
-    
+    spinlock_release(&free_pt);
+
+    /* TO DO: Should be checked for IPT */
     /* Push on queue_fifo and check on swapfile */
+    spinlock_acquire(&free_pt);
     paddr_t res = pt_swap_pop(&pt[i]); /* pop on swapfile if paddr is written there */
     queue_fifo[queue_rear] = i; /* we write the index of page table */
     queue_rear = (queue_rear + 1) % PT_SIZE;  /* update of rear */
@@ -114,12 +116,12 @@ void pt_map(paddr_t p, vaddr_t v){
     (void)res;
 }
 
-void pt_fault(struct pt_entry* pt_e, uint32_t faulttype){
+paddr_t pt_fault(uint32_t faulttype){
     unsigned int i;
     switch(faulttype){
         case INVALID_MAP:
-        (void)pt_e;
         panic("Invalid input address for paging\n");
+        
         case NOT_MAPPED:
         {
         /* Wr're trying to access to a not mapped page */
@@ -130,60 +132,60 @@ void pt_fault(struct pt_entry* pt_e, uint32_t faulttype){
         if(p==0){
             /* there's not enough space -> substitute */    
             i = pt_queue_fifo_pop(); //Liberazione nella pt
-            free_upage(pt[i].paddr); //Liberazione nella "coremap"
+            free_upage(i*PAGE_SIZE); //Liberazione nella "coremap"
             p=alloc_upage(); /* new address -> later, look if it is written in swapfile*/
         }
 
         /* Remember: p must be mapped -> look at pt_translate() */
-        pt_e->paddr = p;
+        return p;
 
         }
         break;
         default:
         break;
     }
+    return 0;
 }
 
 paddr_t pt_translate(vaddr_t v){
     paddr_t p; /* physical address of the frame (frame number) */
-    /* PAGE NUMBER */
-    int i = (int) (v/PAGE_SIZE);
     
-    /* TO DO: Hhmmmmm...
-    if (i>PT_SIZE){
-        pt_fault(NULL, INVALID_MAP);
-    }
-    */
+    unsigned i;
+    bool found = false;
 
+    /* Alignment of virtual address to page */
+    v &= PAGE_FRAME;
+
+    /* Search of the virtual address inside the IPT */
     spinlock_acquire(&free_pt);
-    /* frame number */
-    p = pt[i].paddr;
+    for(i=0;i<PT_SIZE;i++){
+        if(pt[i].vaddr == v){
+            found = true;
+            break;
+        }
+    }
     spinlock_release(&free_pt);
 
-    if(pt[i].status == ABSENT){
-        /* There's not a corresponding frame */
-        pt_fault(&pt[i], NOT_MAPPED);
-        /* Dopo questa istruzione, in pt[i] c'è l'indirizzo fisico cui posso scrivere*/
-        pt_map(pt[i].paddr,v);
-
-        spinlock_acquire(&free_pt);
-        p=pt[i].paddr;
-        spinlock_release(&free_pt);
+    if(found){
+        p = PAGE_SIZE*i;
     }
-    /* physical address to return */
-    //p |= (v & DISPLACEMENT_MASK);
+    else {
+        p = pt_fault(NOT_MAPPED);
+        pt_map(p,v);
+    }
 
     return p;
 }
 
 void pt_swap_push(struct pt_entry* pt_e){
-    swap_in(pt_e->paddr);
+    (void)pt_e;
+    //swap_in(pt_e->paddr);
 }
 
 paddr_t pt_swap_pop(struct pt_entry* pt_e){
-    paddr_t res;
-
-    res=swap_out(pt_e->paddr);
+    paddr_t res = 0;
+    (void)pt_e;
+    //res=swap_out(pt_e->paddr);
 
     return res;
 }

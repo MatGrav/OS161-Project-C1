@@ -7,8 +7,9 @@
 #include <coremap.h>
 
 // TO DO: uhmm check?
-//#define PT_SIZE ((unsigned) (get_nRamFrames()))
-#define PT_SIZE 512*1024U //IN MIPS virtual addrspace, addresses from 0 to 0x7FFFFFF (2GB) are kuseg
+#define PT_SIZE get_nRamFrames()
+//#define PT_SIZE 512*1024U //IN MIPS virtual addrspace, addresses from 0 to 0x7FFFFFF (2GB) are kuseg
+
 
 /* Mask to obtain the displacement from a virtual address */
 #define DISPLACEMENT_MASK 0xFFF
@@ -17,11 +18,22 @@
 #define INVALID_MAP 1
 #define NOT_MAPPED 2 /* there is not a corresponding frame */
 
+#define PRINT_IPT_DIM 1
+
+/*
 struct pt_entry{
-    paddr_t paddr; /* physical address */
+    vaddr_t vaddr; 
+    paddr_t paddr; // physical address, redundancy as (paddr of i_th entry == i_th*PAGE_SIZE) 
+    uint8_t status; // Present or absent 
+    uint8_t protection; // read-only, write, read-write
+}; */
+
+struct pt_entry {
+    vaddr_t vaddr; /* virtual address*/
     uint8_t status; /* Present or absent */
     uint8_t protection; /* read-only, write, read-write*/
 };
+
 
 /* Values of status */
 #define ABSENT 0
@@ -36,7 +48,7 @@ void pt_init(void);
 void pt_page_free(unsigned int);
 void pt_clean_up(void);
 void pt_destroy(void);
-void pt_fault(struct pt_entry*, uint32_t);
+paddr_t pt_fault(uint32_t);
 void pt_map(paddr_t, vaddr_t);
 paddr_t pt_translate(vaddr_t);
 void pt_swap_push(struct pt_entry*);

@@ -8,4 +8,4 @@ swapfile.o: ../../vm/swapfile.c ../../include/types.h \
  ../../include/coremap.h ../../include/addrspace.h opt-dumbvm.h \
  opt-novavm.h ../../include/swapfile.h ../../include/kern/fcntl.h \
  ../../include/uio.h ../../include/kern/iovec.h ../../include/vnode.h \
- ../../include/kern/errno.h
+ ../../include/kern/errno.h ../../include/vmstats.h

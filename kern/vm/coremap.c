@@ -21,7 +21,7 @@ static unsigned int nRamFrames = 0;
 
 static int coremapActive = 0;
 
-int get_nRamFrames(){  return nRamFrames;}
+unsigned int get_nRamFrames(){  return nRamFrames;}
 
 static int isCoremapActive(){
     int active;

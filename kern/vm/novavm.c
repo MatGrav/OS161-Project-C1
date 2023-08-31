@@ -21,11 +21,6 @@
 /* Initialization function */
 void vm_bootstrap(void){
 	coremap_init();
-	int availableRam = get_nRamFrames() * 4096;
-	if (availableRam <= 7*1024*1024){
-		kprintf("Not enough RAM: ending...\n");
-		return;
-	}
 	pt_init();
 	swap_init();
 	vmstats_init();
