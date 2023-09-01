@@ -48,6 +48,8 @@ static unsigned int pt_search(vaddr_t v, bool* found){
         i = buf[buf_index][k];
         if(pt[i].vaddr == v){
             *found = true;
+            spinlock_release(&free_pt);
+            return i;
             break;
         }
     }
