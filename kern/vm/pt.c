@@ -10,6 +10,11 @@
 
 #include "pt.h"
 
+
+#define SOMEMASK 0x00A00000
+#define SECOND_DIM 32
+
+
 struct spinlock free_pt = SPINLOCK_INITIALIZER;
 
 /* Page Table */
@@ -22,18 +27,34 @@ unsigned int* queue_fifo = NULL;
 static unsigned int queue_front = 0;
 static unsigned int queue_rear = 0;
 
+uint16_t (*buf) [SECOND_DIM+1];
+
 
 /* Returns index where virtual address is, found is to be checked after calling */
 static unsigned int pt_search(vaddr_t v, bool* found){
+    unsigned int i,k;
+    
     *found = false;
     spinlock_acquire(&free_pt);
 
 
     /* TO DO: Add Hashing*/
 
+    /* TEST */
+    v &= PAGE_FRAME;
+
+    int buf_index = v/SOMEMASK;
+    for(k=0;k<SECOND_DIM;k++){
+        i = buf[buf_index][k];
+        if(pt[i].vaddr == v){
+            *found = true;
+            break;
+        }
+    }
+
 
     /* Se ci sono collisioni o altro */
-    unsigned int i;
+    
 
     for(i=0;i<PT_SIZE;i++){
         if(pt[i].vaddr == v){
@@ -54,6 +75,17 @@ void pt_init(){
     }
     pt_clean_up();
 
+    /*for (uint8_t i = 0; i < (USERSTACK/SOMEMASK); i++) {
+        buf[i] = NULL;
+    }*/
+    buf = kmalloc((USERSTACK/SOMEMASK)*sizeof(uint16_t[1+SECOND_DIM]));
+    if (buf==NULL){  return;  }
+    for (unsigned long i=0; i<(USERSTACK/SOMEMASK); i++){
+        for(uint8_t j = 0; j<SECOND_DIM; j++){
+            buf[i][j] = 0;
+        }
+    }
+
     queue_fifo = kmalloc(sizeof(uint8_t)*PT_SIZE);
     if (queue_fifo==NULL){  return;  }
 
@@ -61,7 +93,8 @@ void pt_init(){
     kprintf("Dimension of a single IPT entry: %d B\n",sizeof(struct pt_entry));
     kprintf("Current PT_SIZE: %d (# of frames/pages)\n",PT_SIZE);
     kprintf("Dimension of page table %d KB \n",(sizeof(struct pt_entry)*PT_SIZE)/1024);
-    kprintf("Size of queue fifo %d KB \n\n",(sizeof(unsigned int)*PT_SIZE)/1024);
+    kprintf("Size of queue fifo %d KB \n",(sizeof(unsigned int)*PT_SIZE)/1024);
+    kprintf("Size of buf %d KB\n\n",(sizeof(uint16_t)*(USERSTACK/SOMEMASK)*(1+SECOND_DIM)/1024));
 #endif
 
     for (unsigned long i=0; i<PT_SIZE; i++){
@@ -119,6 +152,8 @@ void pt_map(paddr_t p, vaddr_t v){
     p &= PAGE_FRAME;
     v &= PAGE_FRAME;
 
+    int buf_index = v/SOMEMASK;
+
     /* Index in IPT based on physical address p */
     int i = (int) p/PAGE_SIZE;
 
@@ -129,6 +164,13 @@ void pt_map(paddr_t p, vaddr_t v){
         pt[i].status=PRESENT;
     }
     pt[i].protection=PT_E_RW;
+
+    uint16_t circular_index = buf[buf_index][0];
+    circular_index += 1;
+    circular_index = (circular_index % SECOND_DIM) + 1;
+
+    buf[buf_index][circular_index] = i;
+    buf[buf_index][0] = circular_index;
     spinlock_release(&free_pt);
 
     /* TO DO: Should be checked for IPT */
