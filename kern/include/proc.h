@@ -130,4 +130,8 @@ void proc_signal_end(struct proc *proc);
 #if OPT_FILE
 void proc_file_table_copy(struct proc *psrc, struct proc *pdest);
 #endif
+
+/* get current process pid */
+pid_t proc_getpid(void);
+
 #endif /* _PROC_H_ */

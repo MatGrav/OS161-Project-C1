@@ -38,7 +38,7 @@
 #include <segment.h>
 #include <novavm.h>
 #include <coremap.h>
-#include <pt.h>
+#include <ipt.h>
 #include <vmstats.h>
 
 #include <spl.h>

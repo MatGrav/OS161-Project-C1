@@ -11,4 +11,4 @@ coremap.o: ../../vm/coremap.c ../../include/types.h \
  ../../include/limits.h ../../include/kern/limits.h opt-waitpid.h \
  opt-file.h ../../include/addrspace.h ../../include/vm.h opt-dumbvm.h \
  opt-novavm.h ../../include/novavm.h ../../include/coremap.h \
- ../../include/pt.h
+ ../../include/ipt.h

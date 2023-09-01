@@ -12,7 +12,7 @@
 
 #include <novavm.h>
 #include <coremap.h>
-#include <pt.h>
+#include <ipt.h>
 #include <segment.h>
 #include <vm_tlb.h>
 #include <swapfile.h>
@@ -21,7 +21,7 @@
 /* Initialization function */
 void vm_bootstrap(void){
 	coremap_init();
-	pt_init();
+	ipt_init();
 	swap_init();
 	vmstats_init();
 }
@@ -42,11 +42,15 @@ novavm_can_sleep(void)
 int
 vm_fault(int faulttype, vaddr_t faultaddress)
 {
+	//vaddr_t vbase1, vtop1, vbase2, vtop2, stackbase, stacktop;
 	paddr_t paddr = 0;
 	int i;
 	uint32_t ehi, elo;
 	struct addrspace *as;
 	int spl;
+
+	/* TO DO : WARNING: JUst for debug, don't think this is ok*/
+	//if(faultaddress >= 4194704) { faultaddress = 4194704;}
 
 	faultaddress &= PAGE_FRAME;
 
@@ -98,7 +102,7 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	KASSERT((as->stack->vaddr & PAGE_FRAME) == as->stack->vaddr);
 
 	
-	paddr = pt_translate(faultaddress);
+	paddr = ipt_translate(faultaddress);
 
 	if(paddr == 0){
 		return EFAULT;
@@ -109,7 +113,6 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 
 	/* Disable interrupts on this CPU while frobbing the TLB. */
 	spl = splhigh();
-	
 
 	for (i=0; i<NUM_TLB; i++) {
 		tlb_read(&ehi, &elo, i);
@@ -127,8 +130,6 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 
 	/* At this point dumbvm, running out of entries, couldn't handle pf
 	returning EFAULT*/
-	ehi = faultaddress;
-	elo = paddr | TLBLO_DIRTY | TLBLO_VALID;
 	tlb_write(ehi,elo,tlb_get_rr_victim());
 	vmstats_increase_2(TLB_FAULTS,TLB_FAULTS_REPLACE);
 	splx(spl);

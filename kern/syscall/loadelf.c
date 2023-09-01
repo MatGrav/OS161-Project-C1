@@ -63,7 +63,7 @@
 
 #if OPT_NOVAVM
 #include <segment.h>
-#include <pt.h>
+#include <ipt.h>
 #endif
 /*
  * Load a segment at virtual address VADDR. The segment in memory
@@ -82,10 +82,7 @@
 #if OPT_NOVAVM
 static
 int
-load_segment(/*struct addrspace *as, struct vnode *v,
-	     off_t offset, vaddr_t vaddr,
-	     size_t memsize, size_t filesize,
-	     int is_executable*/ struct segment* s)
+load_segment(struct segment* s)
 {
 	struct iovec iov;
 	struct uio u;
@@ -128,36 +125,9 @@ load_segment(/*struct addrspace *as, struct vnode *v,
 		return ENOEXEC;
 	}
 
-	/*
-	 * If memsize > filesize, the remaining space should be
-	 * zero-filled. There is no need to do this explicitly,
-	 * because the VM system should provide pages that do not
-	 * contain other processes' data, i.e., are already zeroed.
-	 *
-	 * During development of your VM system, it may have bugs that
-	 * cause it to (maybe only sometimes) not provide zero-filled
-	 * pages, which can cause user programs to fail in strange
-	 * ways. Explicitly zeroing program BSS may help identify such
-	 * bugs, so the following disabled code is provided as a
-	 * diagnostic tool. Note that it must be disabled again before
-	 * you submit your code for grading.
-	 */
-	#if 0
-	{
-		size_t fillamt;
-
-		fillamt = memsize - filesize;
-		if (fillamt > 0) {
-			DEBUG(DB_EXEC, "ELF: Zero-filling %lu more bytes\n",
-			      (unsigned long) fillamt);
-			u.uio_resid += fillamt;
-			result = uiomovezeros(fillamt, &u);
-		}
-	}
-	#endif
-
-	paddr_t p = pt_translate(s->vaddr);
-	pt_map(p, s->vaddr);
+	paddr_t p = ipt_translate(s->vaddr);
+	pid_t pid = proc_getpid();
+	ipt_map(pid, s->vaddr, p);
 	s->is_loaded=TOTALLY_LOADED;
 	return result;
 }

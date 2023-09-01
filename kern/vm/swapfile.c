@@ -5,7 +5,7 @@
 #include <vm.h>
 #include <vfs.h>
 #include <synch.h>
-#include "pt.h"
+#include <ipt.h>
 #include <swapfile.h>
 #include <kern/fcntl.h>
 #include <uio.h>

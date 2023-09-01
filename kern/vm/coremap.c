@@ -8,7 +8,7 @@
 #include <addrspace.h>
 #include <novavm.h>
 #include <coremap.h>
-#include <pt.h>
+#include <ipt.h>
 
 
 static struct spinlock stealmem_lock = SPINLOCK_INITIALIZER;
@@ -230,7 +230,7 @@ void free_kpages(vaddr_t addr){
     
     /* If it is user address, ask page table */
     if(addr < MIPS_KSEG0){
-      paddr = pt_translate(addr);
+      paddr = ipt_translate(addr);
     } else {
       paddr = addr - MIPS_KSEG0;
     }

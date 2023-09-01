@@ -54,7 +54,7 @@ Un indirizzo generato dalla CPU è diviso in:
 -> page offset(d), combinato con l'indirizzo di base definisce l'indirizzo fisico in memoria che è inviato all'unità di memoria
 
 Inoltre, ogni entry della page table ha dei bit caratteristici. In particolare si può far riferimento alla slide 32 del blocco "Chapter 9: Main Memory".
-Per semplificazione, anziché dei bit, usiamo dei campi nella pt_entry. Eccoli:
+Per semplificazione, anziché dei bit, usiamo dei campi nella ipt_entry. Eccoli:
 Present/Absent:
 Questo campo indica se la pagina virtuale è attualmente presente in memoria fisica o se è assente. Se il bit "present" è impostato, significa che la pagina è stata caricata in memoria fisica e l'indirizzo fisico associato è valido. Se il bit è "absent", potrebbe essere necessario un page fault per caricare la pagina in memoria fisica prima che possa essere accessibile.
 
@@ -73,18 +73,18 @@ Questo campo indica se la cache è disabilitata per la pagina. Questo può esser
 La page table si deve occupare della traduzione da indirizzo logico a indirizzo fisico. Dunque, il kernel lavorerà allocando in maniera contigua, mentre a livello user si utilizzerà la paginazione. La pagetable è vista come una struct con all'interno un vettore di pagine fisiche e ALTRO DA DEFINIRE.
 Bisogna definire (VEDERE COME) il numero di pagine della page table. Come fare? NON è uguale a nRamFrames perché non riguarda tutta la ram, compresa la zona kernel, ma solo lo spazio user.
 La logica con cui si accede al corrispondente valore fisico di un indirizzo è il seguente:
-pt_map() -> pongo in ingresso il fisico DELLA PAGINA (non di un indirizzo specifico) e il virtuale, dal virtuale dividendo per PAGE_SIZE ottengo l'indice di pagina (il cosiddetto page number) che sfrutto come indice del vettore in cui inserire il corrispondente valore fisico
-pt_translate()-> una volta inseriti i valori fisici, per tradurre un indirizzo virtuale basterà semplicemente ottenere l'indice (sempre dividendo per PAGE_SIZE) e accedere all'i-esima posizione del vettore all'interno della struct pagetable. Questo valore però è l'indirizzo del frame, a cui bisogna aggiungere il displacement per ottenere l'indirizzo fisico specifico corrispondente. Per fare ciò, si utilizza una maschera chiamata DISPLACEMENT_MASK inizializzata a 0xFFF, corrispondente agli ultimi 12 bit. In questo modo, se faccio una OR con l'indirizzo VIRTUALE specifico, ottengo il diplacement specifico. Dunque, facendo una OR di questo displacement appena trovato con l'indirizzo fisico del frame p, ottengo frame+displacement, ossia la traduzione fisica dell'indirizzo virtuale.
+ipt_map() -> pongo in ingresso il fisico DELLA PAGINA (non di un indirizzo specifico) e il virtuale, dal virtuale dividendo per PAGE_SIZE ottengo l'indice di pagina (il cosiddetto page number) che sfrutto come indice del vettore in cui inserire il corrispondente valore fisico
+ipt_translate()-> una volta inseriti i valori fisici, per tradurre un indirizzo virtuale basterà semplicemente ottenere l'indice (sempre dividendo per PAGE_SIZE) e accedere all'i-esima posizione del vettore all'interno della struct pagetable. Questo valore però è l'indirizzo del frame, a cui bisogna aggiungere il displacement per ottenere l'indirizzo fisico specifico corrispondente. Per fare ciò, si utilizza una maschera chiamata DISPLACEMENT_MASK inizializzata a 0xFFF, corrispondente agli ultimi 12 bit. In questo modo, se faccio una OR con l'indirizzo VIRTUALE specifico, ottengo il diplacement specifico. Dunque, facendo una OR di questo displacement appena trovato con l'indirizzo fisico del frame p, ottengo frame+displacement, ossia la traduzione fisica dell'indirizzo virtuale.
 
 Poiché la paginazione riguarda, nel nostro caso, solo lo spazio user che è diviso in segmenti, allora l'unità elementare che bisogna allocare è un singolo segmento, che può essere distribuito anche su più pagine.
 Dunque, c'è bisogno di una funzione in segment.c (vedi avanti) oppure dove è definita la load_elf che chiama una funzione nella page table per l'allocazione.
 Ricordiamoci che l'allocazione effettiva la fa la VOP_READ
 In particolare, poiché noi stiamo ancora usando la load_segment (volendo potremmo implementare una nuova funzione), il flow è il seguente per l'allocazione utente:
 
-load_elf -> load_segment -> pt_map() -> VOP_READ
+load_elf -> load_segment -> ipt_map() -> VOP_READ
 (quindi questo per l'aggiornamento della pt)
 
-Quando invece chiamiamo la pt_translate per avere una traduzione di un indirizzo virtuale e NON c'è una corrispondenza, allora significa che il frame fisico richiesto NON è stato ancora caricato in memoria. Bisogna prima quindi creare uno spazio con as_create, poi chiamare la load_segment per caricare l'effettivo segmento in memoria attingendo dal file elf e aggiornare la tabella delle pagine (e la TLB).
+Quando invece chiamiamo la ipt_translate per avere una traduzione di un indirizzo virtuale e NON c'è una corrispondenza, allora significa che il frame fisico richiesto NON è stato ancora caricato in memoria. Bisogna prima quindi creare uno spazio con as_create, poi chiamare la load_segment per caricare l'effettivo segmento in memoria attingendo dal file elf e aggiornare la tabella delle pagine (e la TLB).
 !!!!!! In questo modo, stiamo nella pratica implementando l'on-demand page loading!
 
 ### Algoritmi di sostituzione delle pagine
@@ -105,7 +105,7 @@ Sfrutto due macro definite in swapfile.h che sono SF_ABSENT=0 e SF_PRESENT=1;
 Nelle operazioni di lettura e scrittura, visto che stiamo usando anche una bitmap, ho introdotto uno spinlock per essere sicuri di stare leggendo una entry valida o non valida, per non avere race conditions.
 
 La logica è la seguente:
-Viene chiamata la pt_fault con faulttype==NOT_MAPPED;
+Viene chiamata la ipt_fault con faulttype==NOT_MAPPED;
 La prima cosa che si fa è verificare se c'è spazio libero con p=alloc_upage();
 -> Se p!=0 allora c'è spazio libero e si alloca normalmente, con una conseguente mappatura.
 -> Se p==0 allora NON c'è spazio libero, c'è bisogno di sostituire. Si calcola con pt_fifo e la queue_fifo le pagine da eliminare. Poi, una volta liberato lo spazio di quella pagina facendo lo SWAP IN della pagina nello swapfile

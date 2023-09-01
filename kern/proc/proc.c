@@ -486,3 +486,19 @@ proc_file_table_copy(struct proc *psrc, struct proc *pdest) {
   }
 }
 #endif
+
+pid_t
+proc_getpid(void)
+{
+	pid_t pid;
+	struct proc *proc = curproc;
+
+	if (proc == NULL) {
+		return 0;
+	}
+
+	spinlock_acquire(&proc->p_lock);
+	pid = proc->p_pid;
+	spinlock_release(&proc->p_lock);
+	return pid;
+}

@@ -7,5 +7,5 @@ addrspace.o: ../../vm/addrspace.c ../../include/types.h \
  ../../include/hangman.h opt-hangman.h includelinks/machine/spinlock.h \
  ../../include/limits.h ../../include/kern/limits.h opt-waitpid.h \
  opt-file.h ../../include/segment.h ../../include/novavm.h \
- ../../include/coremap.h ../../include/pt.h ../../include/vmstats.h \
+ ../../include/coremap.h ../../include/ipt.h ../../include/vmstats.h \
  ../../include/spl.h includelinks/mips/tlb.h
