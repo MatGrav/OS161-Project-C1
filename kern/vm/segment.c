@@ -69,8 +69,7 @@ segment_copy(struct segment *old, struct segment **ret){
     newsg->npage=old->npage;
     newsg->filesize=old->filesize;
     newsg->offset=old->offset;
-    newsg->is_loaded=NOT_LOADED; //LOADED?
-    //Have to load?
+    newsg->is_loaded=NOT_LOADED;
     newsg->permission=old->permission;
     newsg->file_elf=old->file_elf;
     newsg->as=old->as;

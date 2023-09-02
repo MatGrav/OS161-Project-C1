@@ -6,7 +6,6 @@
 
 #include <coremap.h>
 
-
 #define IPT_SIZE get_nRamFrames()
 
 /* Debug printing of page table dimension */

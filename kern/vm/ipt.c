@@ -114,21 +114,15 @@ void ipt_destroy()
 {
     kfree(ipt);
 }
-/*
-static unsigned ipt_hash(vaddr_t v)
-{
-    const double A = (2.236067 - 1.0) / 2.0; // Costante di Knuth A (0.6180339887...)
-    double fractional_part = A * (double)v;
-    int index = (int)(IPT_SIZE * (fractional_part - (int)fractional_part));
 
-    if (index < 0)
-    {
-        index += IPT_SIZE;
-    }
+static unsigned int ipt_hash(vaddr_t v)
+{   
+    pid_t pid = proc_getpid();
+    unsigned int h = (pid+v) % IPT_SIZE;
 
-    return index;
+    return h;
 }
-*/
+
 
 /* Returns index where virtual address is, found is to be checked after calling */
 static unsigned int ipt_search(pid_t pid, vaddr_t v, bool *found)
@@ -136,56 +130,38 @@ static unsigned int ipt_search(pid_t pid, vaddr_t v, bool *found)
     KASSERT(pid != 0);
     //KASSERT(v != 0);
 
+    unsigned int index = 0;
+    unsigned int i = 0;
     *found = false;
     /* Page number, no displacement */
     v &= PAGE_FRAME;
 
     spinlock_acquire(&free_ipt);
     /* index to access to inverted page table */
-    /*
-    unsigned int index = ipt_hash(v);
+    
+    index = ipt_hash(v);
 
-    if (ipt[index].p_pid == pid && ipt[index].page_number == v)
+    for (i = index; i < IPT_SIZE; i++)
     {
-        *found = true;
-    }
-    else
-    {
-        unsigned int i;
-        for (i = index; i < IPT_SIZE; i++)
+        if (ipt[i].p_pid == pid && ipt[i].page_number == v)
         {
-            if (ipt[i].p_pid == pid && ipt[i].page_number == v)
-            {
-                *found = true;
-                index = i;
-                break;
-            }
-        }
-        if (!found)
-        {
-            for (i = 0; i < IPT_SIZE - index; i++)
-            {
-                if (ipt[i].p_pid == pid && ipt[i].page_number == v)
-                {
-                    *found = true;
-                    index = i;
-                    break;
-                }
-            }
-        }
-    }
-
-    KASSERT(ipt[index].status == PRESENT);
-    KASSERT(ipt[index].protection == IPT_E_RW);
-    */
-    unsigned i;
-    for(i=0;i<IPT_SIZE;i++){
-        if(ipt[i].p_pid == pid && ipt[i].page_number == v){
             *found = true;
             break;
         }
     }
-    unsigned int index = i;
+    if (!found)
+    {
+        for (i = 0; i < index; i++)
+        {
+            if (ipt[i].p_pid == pid && ipt[i].page_number == v)
+            {
+                *found = true;
+                break;
+            }
+        }
+    }
+    
+    index = i;
     spinlock_release(&free_ipt);
 
     return index;
@@ -214,19 +190,10 @@ void ipt_map(pid_t pid, vaddr_t v, paddr_t p)
         ipt[i].status = PRESENT;
         ipt[i].protection = IPT_E_RW;
     }
-    /* TO DO qualcosa
-    else
-    {
-        panic("Hashing collision!\n");
-    }
-    */
     spinlock_release(&free_ipt);
 
-    /* TO DO: Should be checked for IPT */
     /* Push on queue_fifo and check on swapfile */
     ipt_queue_fifo_push(i);
-
-    //(void)res;
 }
 
 paddr_t ipt_fault(uint32_t faulttype)
@@ -248,12 +215,13 @@ paddr_t ipt_fault(uint32_t faulttype)
         {
             /* there's not enough space -> substitute */
             /* PAGE REPLACEMENT */
-            i = ipt_queue_fifo_pop();  // Liberazione nella pt
-            free_upage(i * PAGE_SIZE); // Liberazione nella "coremap"
-            p = alloc_upage();         /* new address -> later, look if it is written in swapfile*/
+            i = ipt_queue_fifo_pop();
+            free_upage(i * PAGE_SIZE);
+            /* new address */
+            p = alloc_upage();
         }
 
-        /* Remember: p must be mapped -> look at ipt_translate() */
+        /* p will be mapped in ipt_translate() */
         return p;
     }
     break;
@@ -266,8 +234,6 @@ paddr_t ipt_fault(uint32_t faulttype)
 paddr_t ipt_translate(pid_t pid, vaddr_t v)
 {
     unsigned i;
-    // TO DO: O lo ottieni da getpid o glielo passi come parametro
-    //pid_t pid = proc_getpid();
     KASSERT(pid != 0);
 
     /* Alignment of virtual address to page */
@@ -283,7 +249,7 @@ paddr_t ipt_translate(pid_t pid, vaddr_t v)
     bool found = false;
     i = ipt_search(pid, v, &found);
 
-    /* frame number */
+    /* Frame number */
     paddr_t p;
 
     if (found)
@@ -308,7 +274,6 @@ void ipt_swap_push(struct ipt_entry *ipt_e)
     paddr_t p = ipt_translate(ipt_e->p_pid, ipt_e->page_number);
 
     swap_in(p);
-
 }
 
 /* This just invalidates the ipt_entry in SWAPFILE. */
@@ -322,6 +287,4 @@ void ipt_swap_pop(struct ipt_entry *ipt_e)
     paddr_t p = ipt_translate(ipt_e->p_pid, ipt_e->page_number);
     
     swap_out(p);
-
-    //return res;
 }

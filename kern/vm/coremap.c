@@ -103,7 +103,6 @@ void coremap_init(){
   spinlock_acquire(&coremap_lock);
   coremapActive = 1;
   spinlock_release(&coremap_lock);  
-  //kprintf("%d\n",get_nRamFrames());  
 }
 
 unsigned long get_np_sz(){
@@ -127,11 +126,6 @@ void coremap_cleanup(){
 
 static void rem_head(){
     if (cmap->np_sz > 0) {
-        /*
-        if(cmap->entry[np_head]->status==FREE){
-          cmap->entry[np_head]->status=OCCUPIED;
-        }
-        */
         cmap->np_head = (cmap->np_head + 1) % cmap->np_capacity;
         cmap->np_sz--;
     }
@@ -162,7 +156,6 @@ getfreeppages(unsigned long npages) {
 
       /* Free entries should also be removed from cmap np*/
       rem_head();
-      /* TO DO*/
     }
     addr = (paddr_t) cmap->entry[found].frame_addr;
   }
@@ -191,6 +184,16 @@ static paddr_t getppages(unsigned long npages){
   return addr;
 }
 
+static void add_np_entry(struct coremap_entry* cm){
+  cmap->np[cmap->np_tail]->associated_addr = cm->associated_addr;
+  cmap->np[cmap->np_tail]->num_assaddr = cm->num_assaddr;
+  cmap->np[cmap->np_tail]->frame_addr = cm->frame_addr;
+  cmap->np[cmap->np_tail]->status = cm->status;
+  cmap->np[cmap->np_tail]->consec_pages = cm->consec_pages;
+
+  cmap->np_tail = (cmap->np_tail + 1) % nRamFrames;
+}
+
 static int freeppages(paddr_t addr, unsigned long npages){
   long i, first, np=(long)npages;	
 
@@ -203,10 +206,11 @@ static int freeppages(paddr_t addr, unsigned long npages){
   for (i=first; i<first+np; i++) {
     cmap->entry[i].status = FREE;
     cmap->entry[i].consec_pages = 0;
-    kprintf("DEbug: CLeaning a page\n");
-    /* TO DOAggiungere alla lista dei np*/
+    kprintf("Debug: CLeaning a page\n"); 
+    add_np_entry(&cmap->entry[i]);   
   }
   spinlock_release(&coremap_lock);
+
 
   return 1;
 }

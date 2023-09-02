@@ -1,5 +1,3 @@
-//#include <stdio.h>
-//#include <stdlib.h>
 #include <types.h>
 #include <lib.h>
 #include <vm.h>
@@ -18,6 +16,7 @@
 
 static struct vnode* swapfile = NULL;
 static unsigned int* bitmap = NULL; 
+
 static struct spinlock swap_free = SPINLOCK_INITIALIZER;
 
 
@@ -27,8 +26,6 @@ void swap_init(){
     char sf_name[] = "emu0:/SWAPFILE"; // Nome del file di swap
 
     result = vfs_open(sf_name, O_RDWR | O_CREAT, 0, &swapfile);
-    // if result != 0 -> true condition, ok -> reading the body
-    // if result == 0 -> false condition -> not reading the body
     if (result) {
         panic("swapfile_init: vfs_open failed\n");
     }
@@ -40,7 +37,6 @@ void swap_init(){
 
     bitmap = kmalloc(sizeof(unsigned int) * SWAPFILE_SIZE/PAGE_SIZE);
     if(bitmap == NULL){
-        //perror("swap_init: unable to allocate bitmap\n");
         panic("swap_init: unable to allocate bitmap\n");
         return;
     }
@@ -78,8 +74,8 @@ void swap_in(paddr_t paddr){
     ku.uio_space = NULL;
     
     spinlock_acquire(&swap_free);
-    VOP_WRITE(swapfile, &ku);
     if(bitmap[index]==SF_ABSENT){
+        VOP_WRITE(swapfile, &ku);
         bitmap[index]=SF_PRESENT;
     }
     spinlock_release(&swap_free);
