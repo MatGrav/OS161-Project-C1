@@ -1,11 +1,18 @@
 # PdS: Project C1 - Virtual Memory with Demand Paging
+## Variant C1.2 - Inverted Page Table
 
 Progetto svolto per l'insegnamento di Programmazione di sistema AA 2022/23  
 Il gruppo è formato da:  
 - s319634 Matteo Gravagnone  
-- s318083 Danilo Guglielmi  
+- s318083 Danilo Guglielmi
+
+La variante scelta del progetto è la _C1.2 Inverted Page Table_. 
 
 ## Obiettivi principali del progetto:
+Il progetto ha lo scopo di implementare nuove funzionalità per la gestione della memoria. Nello specifico, l'obiettivo è quello di rimpiazzare il modulo DUMBVM con un nuovo gestore della memoria virtuale basato su paginazione.
+
+Il nuovo gestore della memoria si chiama __NovaVM__, il quale implementa diverse nuove funzionalità per la gestione della memoria utente.
+
 Implementazione in OS161 di:
 - Paginazione su richiesta
 - Gestione della TLB con politica di sostituzione
@@ -13,14 +20,15 @@ Implementazione in OS161 di:
 - Statistiche relative a TLB, Page Faults e Swapfile.
 
 ## Suddivisione e metodi di lavoro
+Inizialmente, si è analizzato per diversi giorni il codice di DUMBVM, per capire come funzionasse nello specifico. Successivamente, sonos stati elaborati uno schema logico, affinché fossero garantite le nuove specifiche per NovaVM, e un'approssimata time table.
+Solo in una seconda fase, è iniziata la scrittura del codice.
+
 Un repository su GitHub è stato utilizzato per tenere traccia di tutti i cambiamenti ed introduzioni nel codice.  
 
-Ciò ha permesso ai membri del gruppo di lavorare su computer separati e, ove possibile, di lavorare in proprio.  
+Ciò ha permesso ai membri del gruppo di lavorare in linea generale su computer separati e in autonomia, dividendosi equamente il lavoro, ma ciò non ha impedito una collaborazione costruttiva tra i due. 
 
-Tuttavia, la natura interconnessa del codice ha richiesto ai membri del gruppo di confrontarsi frequentemente sui lavori da farsi: ... **continuare**  
-
+D'altronde, la natura interconnessa del codice ha richiesto ai membri del gruppo di confrontarsi frequentemente sui lavori da farsi, per essere sempre aggiornati sulle funzioni implementate e come esse comunichino con altri nuovi moduli di OS161.
 [Link per stesura di file .md](https://chat.openai.com/share/b8d52ceb-4b52-4795-b3ed-1d0a377be42b)  
-
 
 ## COREMAP
 Il primo modulo implementato dal gruppo è relativo alla coremap, ovvero una struttura dati che consente il tracciamento dei frame liberi (e occupati) in memoria.  
@@ -50,12 +58,9 @@ coremap.c:
 - [ ] coremap
 
 ## Nuovo gestore memoria virtuale
-
-È stato aggiunto un nuovo gestore di memoria virtuale che sostituisce dumbvm. Il suo nome, scelto accuratamente dagli inventori, è NovaVM.
-
-Il gestore dumbvm visto durante il corso unisce, in un unico file sorgente _dumbvm.c_, funzioni di allocazione/deallocazione da noi scritte in coremap, funzioni relative all'addrspace e una funzione, **vm_fault()**, di grande importanza.
-
-Nel nostro novavm.c la funzione principale è quest'ultima, in quanto si è scelto di astrarre addrspace, pagetable ed altro in file singoli.
+Come detto in precedenza, è stato aggiunto un nuovo gestore di memoria virtuale, NovaVM, che sostituisce DUMBVM.
+Il gestore DUMBVM unisce, in un unico file sorgente _dumbvm.c_, funzioni di allocazione/deallocazione. Noi, invece, abbiamo diviso cià in più moduli: in _novavm.c_, c'è il cuore della gestione della memoria: ___vm_fault()___.
+Nel nostro novavm.c la funzione principale è quest'ultima, in quanto si è scelto di astrarre addrspace e pagetable, che prima erano inclusi in DUMBVM, in moduli diversi.
 ```
 int vm_fault(int faulttype, vaddr_t faultaddress){
   /* ... */
@@ -94,10 +99,9 @@ La kill_curthread è stata modificata in modo da terminare il processo user, att
 2- L'introduzione della inverted page table richiede che l'indirizzo fisico da inserire in una entry della TLB sia ottenuto attraverso la IPT, e, a differenza di dumbvm, è presente una politica round-robin per sostituire le entry nella TLB quando questa è piena.
 Ciò consente, ad esempio, l'esecuzione di test user quali **huge**
 
-_Abbiamo modificato la dimensione della RAM in os161/root/sys161.conf portandola da 512K a 8M, in questo modo abbiamo più spazio per allocare._
+_N.B. Abbiamo modificato la dimensione della RAM in os161/root/sys161.conf portandola da 512K a 8M, in questo modo abbiamo più spazio per allocare._
 
-
-## Addrspace
+## Address Space
 In dumbvm, sia pre che post laboratorio 2, ci sono le (ri)definizioni delle funzioni relative all'addrspace, dichiarate in kern/include/addrspace.h. Abbiamo pensato che queste vadano implementate in novavm.c.
 Tuttavia, l'implementazione subirà delle modifiche perché presumiamo che la struct addrspace venga modificata (in addrspace.h) per tener conto della non-contiguità dei segmenti codice, data e stack. 
 
