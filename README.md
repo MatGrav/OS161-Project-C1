@@ -127,6 +127,15 @@ Quando chiami VOP_TRUNCATE, il sistema di file esegue le operazioni necessarie p
 
 Nel contesto della gestione della memoria virtuale e del file di swap, utilizzare VOP_TRUNCATE per impostare la dimensione massima del file di swap garantisce che il file abbia una dimensione fissa e non superi mai la dimensione desiderata (nel tuo caso, 9 MB).
 
+### Come interagiscono lo swapfile e la queue_fifo? quando faccio push e pop su ognuna delle 2 strutture?
+queue_fifo:
+Ogni volta che carichi una pagina in memoria fisica (quando avviene un page fault), aggiungi l'indice o l'ID della pagina nella coda FIFO. Questo indica l'ordine di caricamento delle pagine.
+Ogni volta che rimuovi una pagina dalla memoria fisica (a causa del page replacement), rimuovi il primo elemento dalla coda FIFO poiché è la pagina più vecchia.
+
+SWAPFILE:
+Quando una pagina viene rimossa dalla memoria fisica a causa del page replacement, devi scrivere questa pagina nel file di swap prima di liberare la sua posizione in memoria. Questo assicura che la pagina sia salvata in modo persistente e possa essere recuperata successivamente.
+Quando si verifica un page fault per una pagina non in memoria fisica, dovresti controllare prima se la pagina è presente nel file di swap. Se lo è, caricala dal file di swap nella posizione corretta in memoria fisica.
+
 ## SEGMENTI
 L'ELF header e il program header (PHDR) sono entrambi elementi fondamentali dei file ELF (Executable and Linkable Format), ma svolgono ruoli diversi all'interno di un file ELF.
 
