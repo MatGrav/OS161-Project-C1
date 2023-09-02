@@ -227,12 +227,6 @@ as_prepare_load(struct addrspace *as)
 	(void)as;
 	paddr_t p1, p2;
 
-	/*
-	KASSERT(as->code->vaddr == 0);
-	KASSERT(as->data->vaddr == 0);
-	KASSERT(as->stack->vaddr == 0);
-	*/
-
 	novavm_can_sleep();
 	
 	p1=segment_prepare_load(as->code);
@@ -243,19 +237,6 @@ as_prepare_load(struct addrspace *as)
 	if (p2==0) {
 		return ENOMEM;
 	}
-	/*
-	p3=segment_prepare_load(as->stack);
-	if (p3==0) {
-		return ENOMEM;
-	}
-	*/
-
-
-	/*
-	as_zero_region(as->as_pbase1, as->as_npages1);
-	as_zero_region(as->as_pbase2, as->as_npages2);
-	as_zero_region(as->as_stackpbase, DUMBVM_STACKPAGES);
-	*/
 
 	return 0;
 }
