@@ -130,6 +130,8 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 
 	/* At this point dumbvm, running out of entries, couldn't handle pf
 	returning EFAULT*/
+	ehi = faultaddress;
+	elo = paddr | TLBLO_DIRTY | TLBLO_VALID;
 	tlb_write(ehi,elo,tlb_get_rr_victim());
 	vmstats_increase_2(TLB_FAULTS,TLB_FAULTS_REPLACE);
 	splx(spl);

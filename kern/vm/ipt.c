@@ -114,7 +114,7 @@ void ipt_destroy()
 {
     kfree(ipt);
 }
-
+/*
 static unsigned ipt_hash(vaddr_t v)
 {
     const double A = (2.236067 - 1.0) / 2.0; // Costante di Knuth A (0.6180339887...)
@@ -128,6 +128,7 @@ static unsigned ipt_hash(vaddr_t v)
 
     return index;
 }
+*/
 
 /* Returns index where virtual address is, found is to be checked after calling */
 static unsigned int ipt_search(pid_t pid, vaddr_t v, bool *found)
@@ -141,6 +142,7 @@ static unsigned int ipt_search(pid_t pid, vaddr_t v, bool *found)
 
     spinlock_acquire(&free_ipt);
     /* index to access to inverted page table */
+    /*
     unsigned int index = ipt_hash(v);
 
     if (ipt[index].p_pid == pid && ipt[index].page_number == v)
@@ -175,7 +177,15 @@ static unsigned int ipt_search(pid_t pid, vaddr_t v, bool *found)
 
     KASSERT(ipt[index].status == PRESENT);
     KASSERT(ipt[index].protection == IPT_E_RW);
-
+    */
+    unsigned i;
+    for(i=0;i<IPT_SIZE;i++){
+        if(ipt[i].p_pid == pid && ipt[i].page_number == v){
+            *found = true;
+            break;
+        }
+    }
+    unsigned int index = i;
     spinlock_release(&free_ipt);
 
     return index;
@@ -204,10 +214,12 @@ void ipt_map(pid_t pid, vaddr_t v, paddr_t p)
         ipt[i].status = PRESENT;
         ipt[i].protection = IPT_E_RW;
     }
+    /* TO DO qualcosa
     else
     {
         panic("Hashing collision!\n");
     }
+    */
     spinlock_release(&free_ipt);
 
     /* TO DO: Should be checked for IPT */
@@ -254,7 +266,8 @@ paddr_t ipt_fault(uint32_t faulttype)
 paddr_t ipt_translate(pid_t pid, vaddr_t v)
 {
     unsigned i;
-    pid_t pid = proc_getpid();
+    // TO DO: O lo ottieni da getpid o glielo passi come parametro
+    //pid_t pid = proc_getpid();
     KASSERT(pid != 0);
 
     /* Alignment of virtual address to page */

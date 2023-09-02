@@ -9,6 +9,8 @@
 
 #define IPT_SIZE get_nRamFrames()
 
+/* Debug printing of page table dimension */
+#define PRINT_IPT_DIM 1
 
 /* Mask to obtain the displacement from a virtual address */
 #define DISPLACEMENT_MASK 0xFFF
