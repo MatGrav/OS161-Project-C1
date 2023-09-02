@@ -80,14 +80,13 @@ segment_copy(struct segment *old, struct segment **ret){
 	return 0;
 }
 
-int segment_prepare_load(struct segment* s){
+paddr_t segment_prepare_load(struct segment* s){
     
     KASSERT(s->is_loaded == NOT_LOADED);
 
-    s->vaddr=alloc_upage();
-    vaddr_t v = s->vaddr;
+    paddr_t p = alloc_upage();
 
-    return v;
+    return p;
 }
 
 

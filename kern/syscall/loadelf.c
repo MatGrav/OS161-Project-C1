@@ -125,8 +125,8 @@ load_segment(struct segment* s)
 		return ENOEXEC;
 	}
 
-	paddr_t p = ipt_translate(s->vaddr);
 	pid_t pid = proc_getpid();
+	paddr_t p = ipt_translate(pid, s->vaddr);
 	ipt_map(pid, s->vaddr, p);
 	s->is_loaded=TOTALLY_LOADED;
 	return result;

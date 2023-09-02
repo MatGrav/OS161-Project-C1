@@ -10,7 +10,7 @@
 void swap_init(void);
 void swap_clean_up(void);
 void swap_in(paddr_t);
-paddr_t swap_out(paddr_t);
+void swap_out(paddr_t);
 
 
 #endif

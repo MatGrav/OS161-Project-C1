@@ -101,8 +101,8 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	KASSERT((as->data->vaddr & PAGE_FRAME) == as->data->vaddr);
 	KASSERT((as->stack->vaddr & PAGE_FRAME) == as->stack->vaddr);
 
-	
-	paddr = ipt_translate(faultaddress);
+	pid_t pid = proc_getpid();
+	paddr = ipt_translate(pid, faultaddress);
 
 	if(paddr == 0){
 		return EFAULT;

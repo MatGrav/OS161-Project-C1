@@ -230,7 +230,8 @@ void free_kpages(vaddr_t addr){
     
     /* If it is user address, ask page table */
     if(addr < MIPS_KSEG0){
-      paddr = ipt_translate(addr);
+      pid_t pid = proc_getpid();
+      paddr = ipt_translate(pid, addr);
     } else {
       paddr = addr - MIPS_KSEG0;
     }

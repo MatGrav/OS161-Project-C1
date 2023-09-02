@@ -39,8 +39,8 @@ void ipt_clean_up(void);
 void ipt_destroy(void);
 paddr_t ipt_fault(uint32_t);
 void ipt_map(pid_t, vaddr_t, paddr_t);
-paddr_t ipt_translate(vaddr_t);
+paddr_t ipt_translate(pid_t, vaddr_t);
 void ipt_swap_push(struct ipt_entry*);
-paddr_t ipt_swap_pop(struct ipt_entry*);
+void ipt_swap_pop(struct ipt_entry*);
 
 #endif
