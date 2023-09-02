@@ -6,11 +6,11 @@ novavm.o: ../../vm/novavm.c ../../include/types.h \
  ../../include/hangman.h opt-hangman.h includelinks/machine/spinlock.h \
  ../../include/threadlist.h includelinks/machine/vm.h \
  ../../include/proc.h ../../include/limits.h ../../include/kern/limits.h \
- opt-waitpid.h opt-file.h ../../include/current.h \
+ opt-waitpid.h opt-file.h opt-novavm.h ../../include/current.h \
  includelinks/machine/current.h ../../include/thread.h \
  ../../include/array.h includelinks/machine/thread.h \
  ../../include/setjmp.h includelinks/kern/machine/setjmp.h \
  includelinks/mips/tlb.h ../../include/addrspace.h ../../include/vm.h \
- opt-dumbvm.h opt-novavm.h ../../include/novavm.h ../../include/coremap.h \
+ opt-dumbvm.h ../../include/novavm.h ../../include/coremap.h \
  ../../include/ipt.h ../../include/segment.h ../../include/vm_tlb.h \
  ../../include/swapfile.h ../../include/vmstats.h

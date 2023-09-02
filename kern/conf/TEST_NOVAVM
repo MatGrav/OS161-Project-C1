@@ -37,3 +37,4 @@ options waitpid
 options syscalls
 options novavm
 options file
+options synch

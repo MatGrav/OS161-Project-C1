@@ -40,6 +40,7 @@
 #include <limits.h>
 #include "opt-waitpid.h"
 #include "opt-file.h"
+#include "opt-novavm.h"
 
 struct addrspace;
 struct thread;
@@ -132,6 +133,8 @@ void proc_file_table_copy(struct proc *psrc, struct proc *pdest);
 #endif
 
 /* [OPT_NOVAVM]: get current process pid */
+#if OPT_NOVAVM
 pid_t proc_getpid(void);
+#endif 
 
 #endif /* _PROC_H_ */

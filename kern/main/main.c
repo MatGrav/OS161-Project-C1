@@ -158,7 +158,9 @@ shutdown(void)
 	vfs_clearcurdir();
 	vfs_unmountall();
 	thread_shutdown();
+#if OPT_NOVAVM
 	vm_shutdown();
+#endif
 
 	splhigh();
 }

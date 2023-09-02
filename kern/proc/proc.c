@@ -487,6 +487,7 @@ proc_file_table_copy(struct proc *psrc, struct proc *pdest) {
 }
 #endif
 
+#if OPT_NOVAVM
 pid_t
 proc_getpid(void)
 {
@@ -502,3 +503,4 @@ proc_getpid(void)
 	spinlock_release(&proc->p_lock);
 	return pid;
 }
+#endif

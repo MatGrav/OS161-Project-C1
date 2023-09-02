@@ -77,7 +77,8 @@ static unsigned int ipt_queue_fifo_pop()
 static void ipt_queue_fifo_push(unsigned int el)
 {
     KASSERT(el != 0);
-
+    // TO DO: i defined where?
+    unsigned int i = el;
     spinlock_acquire(&free_queue);
     queue_fifo[queue_rear] = i; /* we write the index of page table */
     queue_rear = (queue_rear + 1) % IPT_SIZE; /* update of rear */
@@ -132,7 +133,7 @@ static unsigned ipt_hash(vaddr_t v)
 static unsigned int ipt_search(pid_t pid, vaddr_t v, bool *found)
 {
     KASSERT(pid != 0);
-    KASSERT(v != 0);
+    //KASSERT(v != 0);
 
     *found = false;
     /* Page number, no displacement */
@@ -213,7 +214,7 @@ void ipt_map(pid_t pid, vaddr_t v, paddr_t p)
     /* Push on queue_fifo and check on swapfile */
     ipt_queue_fifo_push(i);
 
-    (void)res;
+    //(void)res;
 }
 
 paddr_t ipt_fault(uint32_t faulttype)
@@ -253,7 +254,7 @@ paddr_t ipt_fault(uint32_t faulttype)
 paddr_t ipt_translate(pid_t pid, vaddr_t v)
 {
     unsigned i;
-    // pid_t pid = proc_getpid();
+    pid_t pid = proc_getpid();
     KASSERT(pid != 0);
 
     /* Alignment of virtual address to page */
@@ -309,5 +310,5 @@ void ipt_swap_pop(struct ipt_entry *ipt_e)
     
     swap_out(p);
 
-    return res;
+    //return res;
 }
