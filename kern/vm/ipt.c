@@ -63,14 +63,18 @@ static unsigned int ipt_queue_fifo_pop()
 
     /* index of old page to pop */
     unsigned int old = queue_fifo[queue_front];
-    spinlock_release(&free_queue);
-    // write on swapfile -> call a function in swapfile.c
-    ipt_swap_push(&ipt[old]);
-    spinlock_acquire(&free_queue);
-    ipt_page_free(old);
     queue_front = (queue_front + 1) % IPT_SIZE;
+    struct ipt_entry alias = ipt[old];
 
     spinlock_release(&free_queue);
+    // write on swapfile -> call a function in swapfile.c
+    
+    ipt_swap_push(&alias);
+    kprintf("A\n");
+    spinlock_acquire(&free_ipt);
+    ipt_page_free(old);
+
+    spinlock_release(&free_ipt);
 
     return old;
 }
@@ -283,9 +287,15 @@ paddr_t ipt_translate(pid_t pid, vaddr_t v)
 
 void ipt_swap_push(struct ipt_entry *ipt_e)
 {
+    /*
+    if(ipt_e->p_pid==0){
+        return;
+    }
+    */
     KASSERT(ipt_e->p_pid!=0);
     KASSERT(ipt_e->page_number!=0);
     KASSERT(ipt_e->protection==IPT_E_RW);
+    
 
     paddr_t p = ipt_translate(ipt_e->p_pid, ipt_e->page_number);
 

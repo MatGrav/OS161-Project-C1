@@ -60,7 +60,7 @@ void vmstats_print(){
     kprintf("Page Faults from Swapfile: %u\n",curstats[PAGE_FAULTS_SWAPFILE]);
     kprintf("Swapfile Writes: %u\n",curstats[SWAPFILE_WRITES]);
 
-    if(curstats[TLB_FAULTS] != (curstats[PAGE_FAULTS_DISK] + curstats[PAGE_FAULTS_SWAPFILE] + curstats[PAGE_FAULTS_ELF])){
+    if(curstats[PAGE_FAULTS_DISK] != (curstats[PAGE_FAULTS_SWAPFILE] + curstats[PAGE_FAULTS_ELF])){
         kprintf("\n>>>[WARNING: Page Faults (Disk) is not equal to Page Faults from Swapfile + Page Faults from ELF]\n\n");
     };
     kprintf("\n\n");
