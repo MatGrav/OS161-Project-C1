@@ -11,7 +11,7 @@ La variante scelta del progetto è la _C1.2 Inverted Page Table_.
 ## Obiettivi principali del progetto:
 Il progetto ha lo scopo di implementare nuove funzionalità per la gestione della memoria. Nello specifico, l'obiettivo è quello di rimpiazzare il modulo DUMBVM con un nuovo gestore della memoria virtuale basato su paginazione.
 
-Il nuovo gestore della memoria si chiama __NovaVM__, il quale implementa diverse nuove funzionalità per la gestione della memoria utente.
+Il nuovo gestore della memoria si chiama __NovaVM__, il quale implementa diverse nuove funzionalità per la gestione della memoria.
 
 Implementazione in OS161 di:
 - Paginazione su richiesta
@@ -20,12 +20,10 @@ Implementazione in OS161 di:
 - Statistiche relative a TLB, Page Faults e Swapfile.
 
 ## Suddivisione e metodi di lavoro
-Inizialmente, si è analizzato per diversi giorni il codice di DUMBVM, per capire come funzionasse nello specifico. Successivamente, sonos stati elaborati uno schema logico, affinché fossero garantite le nuove specifiche per NovaVM, e un'approssimata time table.
+Inizialmente, si è analizzato per diversi giorni il codice di DUMBVM, per capire come funzionasse nello specifico. Successivamente, sono stati elaborati uno schema logico, affinché fossero garantite le nuove specifiche per NovaVM, e un'approssimata time table.
 Solo in una seconda fase, è iniziata la scrittura del codice.
 
-Un repository su GitHub è stato utilizzato per tenere traccia di tutti i cambiamenti ed introduzioni nel codice.  
-
-Ciò ha permesso ai membri del gruppo di lavorare in linea generale su computer separati e in autonomia, dividendosi equamente il lavoro, ma ciò non ha impedito una collaborazione costruttiva tra i due. 
+Un repository su GitHub è stato utilizzato per tenere traccia di tutti i cambiamenti ed introduzioni nel codice. Ciò ha permesso ai membri del gruppo di lavorare in linea generale su computer separati e in autonomia, dividendosi equamente il lavoro, ma ciò non ha impedito una collaborazione costruttiva tra i due.
 
 D'altronde, la natura interconnessa del codice ha richiesto ai membri del gruppo di confrontarsi frequentemente sui lavori da farsi, per essere sempre aggiornati sulle funzioni implementate e come esse comunichino con altri nuovi moduli di OS161.
 [Link per stesura di file .md](https://chat.openai.com/share/b8d52ceb-4b52-4795-b3ed-1d0a377be42b)  
@@ -53,13 +51,9 @@ Da qui in poi, bisogna utilizzare le funzioni da definire in coremap.c per una g
 **Nel nostro caso, non possiamo fare così. Dobbiamo, qualora non ci fosse più spazio disponibile (ergo, non ci sono sufficienti frame marcati come liberi), chiamare  un
 algoritmo di sostituzione delle pagine, secondo una politica di sostituzione da definire in seguito (second chance, ecc).**  
 
-coremap.c:
-- [x] coremap_init inizializza le struct (la coremap static?)
-- [ ] coremap
-
-## Nuovo gestore memoria virtuale
+## NovaVM: Nuovo gestore memoria virtuale
 Come detto in precedenza, è stato aggiunto un nuovo gestore di memoria virtuale, NovaVM, che sostituisce DUMBVM.
-Il gestore DUMBVM unisce, in un unico file sorgente _dumbvm.c_, funzioni di allocazione/deallocazione. Noi, invece, abbiamo diviso cià in più moduli: in _novavm.c_, c'è il cuore della gestione della memoria: ___vm_fault()___.
+Il gestore DUMBVM unisce, in un unico file sorgente _dumbvm.c_, funzioni di allocazione/deallocazione. Noi, invece, abbiamo scelto di suddividerle in più moduli: in _novavm.c_, c'è il cuore della gestione della memoria: ___vm_fault()___
 Nel nostro novavm.c la funzione principale è quest'ultima, in quanto si è scelto di astrarre addrspace e pagetable, che prima erano inclusi in DUMBVM, in moduli diversi.
 ```
 int vm_fault(int faulttype, vaddr_t faultaddress){
@@ -102,37 +96,32 @@ Ciò consente, ad esempio, l'esecuzione di test user quali **huge**
 _N.B. Abbiamo modificato la dimensione della RAM in os161/root/sys161.conf portandola da 512K a 8M, in questo modo abbiamo più spazio per allocare._
 
 ## Address Space
-In dumbvm, sia pre che post laboratorio 2, ci sono le (ri)definizioni delle funzioni relative all'addrspace, dichiarate in kern/include/addrspace.h. Abbiamo pensato che queste vadano implementate in novavm.c.
-Tuttavia, l'implementazione subirà delle modifiche perché presumiamo che la struct addrspace venga modificata (in addrspace.h) per tener conto della non-contiguità dei segmenti codice, data e stack. 
+Ogni processo ha un proprio spazio di indirizzamento, che in OS161 può essere visto come l'unione di 3 segmenti: codice, dati e stack. Abbiamo scelto di utilizzare questa rappresentazione, utilizzando la __struct segment__ (vedi paragrafo).
+
+[ CODICE ADDRSPACE]
+
+A supporto di tale struttura, sono state implementate diverse funzioni: `as_create()` per l'allocazione della struct (che a sua volta chiama la `segment_create()`, che alloca ogni segmento), `as_destroy()` per la deallocazione e distruzione della struct, `as_copy()` per copiarla.
+È importante da menzionare anche `as_activate()` la quale, facendo il flush della TLB (invalida ogni entry), ci permette di gestire al meglio anche i cambi di contesto.
+Le funzioni `as_define_region()` - che inizializza uno specifico segmento codice o dati, lo stack viene inizializzato in `as_define_stack()` - e `as_prepare_load()` - che prepara il caricamento dell'address space in memoria chiamando a sua volta la `segment_prepare_load()` - sono chiamate dalla `load_elf()` per il caricamento dell'eseguibile ELF nell'address space corrente.
+
+La `load_elf()` è stata a sua volta modificata, introducendo la nuova logica dei segmenti. Conseguentemente, è stata reimplementata la `load_segment()` la quale comunica con la Inverted Page Table per ottenere gli indirizzi fisici di cui ha bisogno.
 
 ## (Inverted) Page Table
-La scelta finale è ricaduta su una IPT, pertanto unica a livello di sistema e di dimensione pari al numero di frame.  
-La entry generica della IPT memorizza l'identificativo del processo, l' indirizzo virtuale (allineato a pagina), stato e protezione.  
+La scelta finale è ricaduta su una IPT, pertanto unica a livello di sistema e di dimensione pari al numero di frame (_nRamFrames_).  
+La entry generica della IPT memorizza l'identificativo del processo, l' indirizzo virtuale (allineato a pagina), stato (_ABSENT_ o _PRESENT_) e protezione.
 Si nota che, per semplicità, si è scelto di memorizzare indirizzo virtuale, stato e protezione anzichè numero di pagina virtuale, bit di stato e bits di protezione.  
 
-Tra le funzioni principali, ci sono
-```
-paddr_t ipt_translate(pid_t pid, vaddr_t v){
-    /* Alignment of virtual address to page */
-    v &= PAGE_FRAME;
+[CODICE STRUCT IPT_ENRTRY]
 
-    if (v >= USERSTACK){ ipt_fault(INVALID_MAP);    }
+Oltre alle tipiche funzioni per la creazione e distruzione della page table e delle sue entry, 
+ci sono nuove funzioni per la mappatura degli indirizzi, per la traduzione logico-fisica e per la gestione dei page fault.
+Nello specifico:
+- `ipt_fault()` gestisce i page fault nei casi in cui l'indirizzo sia non valido (_INVALID_MAP_) oppure non mappato (_NOT_MAPPED_)
+- `ipt_translate()` per la traduzione degli indirizzi, qualora non ci fosse una traduzione chiamarebbe la `ipt_fault()`
+- `ipt_map` per la mappatura calcola l'indice _i_ della tabella delle pagine secondo la logica della IPT, ossia dividendo l'indirizzo fisico allineato con la dimensione di una pagina _PAGE_SIZE_.
 
-    /* Search of the virtual address inside the IPT */
-    bool found = false;
-    i = ipt_search(pid, v, &found);
-
-    /* frame number */
-    paddr_t p;
-
-    if (found){ p = PAGE_SIZE * i; }
-    else{
-        p = ipt_fault(NOT_MAPPED);
-        ipt_map(pid, v, p);
-    }return p;
-}
-```
-
+## Come velocizzare la ricerca delle pagine nella IPT
+La ricerca all'interno della page table è gestita da una funzione statica chiamata _ipt_search()_. Tale funzione, chiamando _ipt_mra_ (Most Recently Added), ottiene _BUFF_SIZE_ indici di pagina in cui verifica se l'elemento cercato è presente in tali pagine. Poiché il buffer utilizzato per contenere gli indici li ottiene prelevandoli dalla coda di __queue_fifo__, allora si cercherà l'elemento prima nelle più recenti pagine aggiunte. In una seconda fase, qualora non avesse ancora trovato l'elemento cercato, farà una ricerca lineare all'interno della IPT.
 
 
 
