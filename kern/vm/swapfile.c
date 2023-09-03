@@ -12,6 +12,7 @@
 #include <kern/errno.h>
 
 #include <vmstats.h>
+#include <proc.h>
 
 
 static struct vnode* swapfile = NULL;
@@ -71,7 +72,7 @@ void swap_out(paddr_t paddr){
     ku.uio_resid = sizeof(paddr_t);
     ku.uio_segflg = UIO_USERSPACE;
     ku.uio_rw = UIO_WRITE; /* from uio_seg to kernel */
-    ku.uio_space = NULL;
+    ku.uio_space = proc_getas();
     
     spinlock_acquire(&swap_free);
     if(bitmap[index]==SF_ABSENT){
@@ -104,7 +105,7 @@ void swap_in(paddr_t paddr){
     ku.uio_resid = sizeof(paddr_t);
     ku.uio_segflg = UIO_USERSPACE;
     ku.uio_rw = UIO_READ; /* from kernel to uio_seg */
-    ku.uio_space = NULL;
+    ku.uio_space = proc_getas();
 
 
     spinlock_acquire(&swap_free);

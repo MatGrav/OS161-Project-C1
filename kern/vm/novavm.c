@@ -17,6 +17,9 @@
 #include <vm_tlb.h>
 #include <swapfile.h>
 #include <vmstats.h>
+#include <spinlock.h>
+
+bool isVM = false;
 
 /* Initialization function */
 void vm_bootstrap(void){
@@ -36,6 +39,12 @@ novavm_can_sleep(void)
 		/* must not be in an interrupt handler */
 		KASSERT(curthread->t_in_interrupt == 0);
 	}
+}
+
+bool get_isVM(){
+	bool temp = isVM;
+	isVM = false;
+	return temp;
 }
 
 /* Fault handling function called by trap code */
@@ -100,6 +109,7 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	vmstats_increase(TLB_FAULTS);
 
 	pid_t pid = proc_getpid();
+	isVM = true;
 	paddr = ipt_translate(pid, faultaddress);
 
 	if(paddr == 0){
@@ -127,7 +137,7 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 		return 0;
 	}
 
-	/* At this point dumbvm, running out of entries, couldn't handle pf
+	/* At this point novavm, running out of entries, couldn't handle pf
 	returning EFAULT*/
 	ehi = faultaddress;
 	elo = paddr | TLBLO_DIRTY | TLBLO_VALID;

@@ -17,5 +17,6 @@ void novavm_can_sleep(void);
 /* Calls the print_stats function */
 void vm_shutdown(void);
 
+bool get_isVM(void);
 
 #endif

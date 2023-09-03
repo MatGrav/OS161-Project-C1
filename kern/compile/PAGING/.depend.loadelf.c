@@ -12,4 +12,5 @@ loadelf.o: ../../syscall/loadelf.c ../../include/types.h \
  includelinks/kern/machine/setjmp.h ../../include/addrspace.h \
  ../../include/vm.h includelinks/machine/vm.h opt-dumbvm.h \
  ../../include/vnode.h ../../include/elf.h includelinks/machine/elf.h \
- ../../include/segment.h ../../include/ipt.h ../../include/coremap.h
+ ../../include/segment.h ../../include/ipt.h ../../include/coremap.h \
+ ../../include/vmstats.h

@@ -64,6 +64,7 @@
 #if OPT_PAGING
 #include <segment.h>
 #include <ipt.h>
+#include <vmstats.h>
 #endif
 /*
  * Load a segment at virtual address VADDR. The segment in memory
@@ -128,6 +129,7 @@ load_segment(struct segment* s)
 	pid_t pid = proc_getpid();
 	paddr_t p = ipt_translate(pid, s->vaddr);
 	ipt_map(pid, s->vaddr, p);
+	vmstats_increase(PAGE_FAULTS_ELF);
 	s->is_loaded=TOTALLY_LOADED;
 	return result;
 }

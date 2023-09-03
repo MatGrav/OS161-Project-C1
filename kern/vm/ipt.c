@@ -34,7 +34,7 @@ void ipt_init()
     }
     ipt_clean_up();
 
-    queue_fifo = kmalloc(sizeof(uint8_t) * IPT_SIZE);
+    queue_fifo = kmalloc(sizeof(unsigned int) * IPT_SIZE);
     if (queue_fifo == NULL)
     {
         return;
@@ -62,15 +62,18 @@ static unsigned int ipt_queue_fifo_pop()
     spinlock_acquire(&free_queue);
 
     /* index of old page to pop */
-    unsigned int old = queue_fifo[queue_front];
-    queue_front = (queue_front + 1) % IPT_SIZE;
+    unsigned int old, i=0;
+    do{
+    old = queue_fifo[queue_front+i];
+    queue_front = (queue_front + 1 + i) % IPT_SIZE;
+    i++;
+    } while (ipt[old].p_pid==0);
     struct ipt_entry alias = ipt[old];
 
     spinlock_release(&free_queue);
     // write on swapfile -> call a function in swapfile.c
     
     ipt_swap_push(&alias);
-    kprintf("A\n");
     spinlock_acquire(&free_ipt);
     ipt_page_free(old);
 
@@ -225,7 +228,7 @@ paddr_t ipt_fault(uint32_t faulttype)
     {
         /* Wr're trying to access to a not mapped page */
         /* Let's update it in memory and so in page table */
-
+        
         paddr_t p = alloc_upage();
 
         if (p == 0)
@@ -233,7 +236,7 @@ paddr_t ipt_fault(uint32_t faulttype)
             /* there's not enough space -> substitute */
             /* PAGE REPLACEMENT */
             i = ipt_queue_fifo_pop();
-            free_upage(i * PAGE_SIZE);
+            free_upage((paddr_t) i * PAGE_SIZE);
             /* new address */
             p = alloc_upage();
         }
@@ -272,14 +275,18 @@ paddr_t ipt_translate(pid_t pid, vaddr_t v)
     if (found)
     {
         p = PAGE_SIZE * i;
-        vmstats_increase(TLB_RELOADS);
+        if(get_isVM()==true){
+            vmstats_increase(TLB_RELOADS);
+        }
     }
     else
     {
         p = ipt_fault(NOT_MAPPED);
         ipt_map(pid, v, p);
-        vmstats_increase(PAGE_FAULTS_ZEROED);
-        if(v < USERSTACK-(NOVAVM_STACKPAGES*PAGE_SIZE)){ vmstats_increase_2(PAGE_FAULTS_ELF,PAGE_FAULTS_DISK);}
+        if(get_isVM()==true){
+            vmstats_increase(PAGE_FAULTS_ZEROED);
+        }
+        vmstats_increase(PAGE_FAULTS_DISK);
     }
 
     return p;
@@ -287,11 +294,7 @@ paddr_t ipt_translate(pid_t pid, vaddr_t v)
 
 void ipt_swap_push(struct ipt_entry *ipt_e)
 {
-    /*
-    if(ipt_e->p_pid==0){
-        return;
-    }
-    */
+
     KASSERT(ipt_e->p_pid!=0);
     KASSERT(ipt_e->page_number!=0);
     KASSERT(ipt_e->protection==IPT_E_RW);

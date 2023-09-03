@@ -8,4 +8,6 @@ swapfile.o: ../../vm/swapfile.c ../../include/types.h \
  ../../include/coremap.h ../../include/addrspace.h opt-dumbvm.h \
  opt-paging.h ../../include/swapfile.h ../../include/kern/fcntl.h \
  ../../include/uio.h ../../include/kern/iovec.h ../../include/vnode.h \
- ../../include/kern/errno.h ../../include/vmstats.h
+ ../../include/kern/errno.h ../../include/vmstats.h ../../include/proc.h \
+ ../../include/limits.h ../../include/kern/limits.h opt-waitpid.h \
+ opt-file.h
