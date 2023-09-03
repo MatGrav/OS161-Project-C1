@@ -146,17 +146,17 @@ A supporto della struct segment, sono state create funzioni per la gestione tra 
 
 Come richiesto, il sistema traccia molteplici statistiche relative a TLB, Page Faults e swapfile.  
 Oltre all'esecuzione di test a livello kernel, tra cui km1, km2, tt1, tt2 ed altri, si sono scelti alcuni programmi utente presenti in userland/testbin da eseguire e per i quali si riportano le statistiche raccolte dalla console, spento il sistema.
-Si noti che sono state raccolte con RAM pari a 8MB.
+Si noti che sono state raccolte con RAM pari a 4MB.
 
 |     | Palin           | CTest           | Matmult         | Huge            | Sort            |
 |-----|-----------------|-----------------|-----------------|-----------------|-----------------|
-| TLB Faults        | Valore per Palin  | Valore per CTest  | Valore per Matmult | Valore per Huge   | Valore per Sort   |
-| TLB Free          | Valore per Palin  | Valore per CTest  | Valore per Matmult | Valore per Huge   | Valore per Sort   |
-| TLB Replace       | Valore per Palin  | Valore per CTest  | Valore per Matmult | Valore per Huge   | Valore per Sort   |
-| TLB Invalidations | Valore per Palin  | Valore per CTest  | Valore per Matmult | Valore per Huge   | Valore per Sort   |
-| TLB Reloads       | Valore per Palin  | Valore per CTest  | Valore per Matmult | Valore per Huge   | Valore per Sort   |
-| PF Zeroed         | Valore per Palin  | Valore per CTest  | Valore per Matmult | Valore per Huge   | Valore per Sort   |
-| PF Disk           | Valore per Palin  | Valore per CTest  | Valore per Matmult | Valore per Huge   | Valore per Sort   |
-| PF Elf            | Valore per Palin  | Valore per CTest  | Valore per Matmult | Valore per Huge   | Valore per Sort   |
-| PF Swapfile       | Valore per Palin  | Valore per CTest  | Valore per Matmult | Valore per Huge   | Valore per Sort   |
-| Swapfile Writes   | Valore per Palin  | Valore per CTest  | Valore per Matmult | Valore per Huge   | Valore per Sort   |
+| TLB Faults        |14094  | 125332 | 947 | 3990   | 2007   |
+| TLB Free          | 14094 | 150  | 190 | 772   | 181   |
+| TLB Replace       | 0 	| 125182  | 757 | 3218   | 1826   |
+| TLB Invalidations | 7878  | 42  | 74 | 178  | 42   |
+| TLB Reloads       | 14079 | 125332  | 947 | 3990  | 2007  |
+| PF Zeroed         | 7 	| 262  | 385 | 517 | 295   |
+| PF Disk           | 5 	| 260  | 383 | 515 | 293   |
+| PF Elf            | 2 	| 2  | 2 | 2  | 2 |
+| PF Swapfile       | 0		| 0  | 0 | 0   | 0   |
+| Swapfile Writes   | 0 	| 0 | 0 | 0   | 0   |
