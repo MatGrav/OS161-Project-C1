@@ -37,7 +37,7 @@
 
 #include <vm.h>
 #include "opt-dumbvm.h"
-#include "opt-novavm.h"
+#include "opt-paging.h"
 
 // #include <segment.h>
 
@@ -60,7 +60,7 @@ struct addrspace {
         paddr_t as_pbase2;
         size_t as_npages2;
         paddr_t as_stackpbase;
-#elif OPT_NOVAVM        
+#elif OPT_PAGING        
         struct segment* code;
         struct segment* data;
         struct segment* stack;  
@@ -121,7 +121,7 @@ int               as_define_region(struct addrspace *as,
                                    int readable,
                                    int writeable,
                                    int executable);
-#elif OPT_NOVAVM
+#elif OPT_PAGING
 int               as_define_region(struct addrspace *as,
                                    vaddr_t vaddr, size_t sz,
                                    int readable,

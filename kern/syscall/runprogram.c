@@ -88,7 +88,7 @@ runprogram(char *progname)
 	}
 
 	/* Done with the file now. */
-#if !OPT_NOVAVM
+#if !OPT_PAGING
 	vfs_close(v);
 #endif
 

@@ -276,7 +276,7 @@ Da fare:
 
 5- Controllare rem_head() e rem_qualcosaltro in coremap.c
 6- Gestire i permessi di ogni pagina o segmento (davvero ci servono?)
-7- Mettere gli #if OPT_NOVAVM
+7- Mettere gli #if OPT_PAGING
 8- controllare se funziona lo swapfile (se scrive le pagine e le toglie)
 9- Funzionerebbe con 4MB di RAM ma l'introduzione dei file di lab5 richiedono il passaggio a 8MB
 DANILO:

@@ -43,7 +43,7 @@
 
 #include <spl.h>
 
-#include "opt-novavm.h"
+#include "opt-paging.h"
 
 #include <mips/tlb.h>
 
@@ -254,7 +254,7 @@ int
 as_define_stack(struct addrspace *as, vaddr_t *stackptr)
 {
 
-#if OPT_NOVAVM
+#if OPT_PAGING
 	
 	as->stack = segment_create();
 	if (as->stack==NULL){

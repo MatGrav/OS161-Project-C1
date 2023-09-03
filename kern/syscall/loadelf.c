@@ -59,9 +59,9 @@
 #include <addrspace.h>
 #include <vnode.h>
 #include <elf.h>
-#include "opt-novavm.h"
+#include "opt-paging.h"
 
-#if OPT_NOVAVM
+#if OPT_PAGING
 #include <segment.h>
 #include <ipt.h>
 #endif
@@ -79,7 +79,7 @@
  * change this code to not use uiomove, be sure to check for this case
  * explicitly.
  */
-#if OPT_NOVAVM
+#if OPT_PAGING
 static
 int
 load_segment(struct segment* s)
@@ -301,7 +301,7 @@ load_elf(struct vnode *v, vaddr_t *entrypoint)
 			return ENOEXEC;
 		}
 
-		#if OPT_NOVAVM
+		#if OPT_PAGING
 		result = as_define_region(as,
 					  ph.p_vaddr, ph.p_memsz,
 					  ph.p_flags & PF_R,
@@ -356,7 +356,7 @@ load_elf(struct vnode *v, vaddr_t *entrypoint)
 			return ENOEXEC;
 		}
 
-		#if OPT_NOVAVM
+		#if OPT_PAGING
 		struct segment* s = segment_create_and_populate(as, v, ph.p_offset, ph.p_vaddr,
 				      ph.p_memsz, ph.p_filesz,
 				      ph.p_flags & PF_X);

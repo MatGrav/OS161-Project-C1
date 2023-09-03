@@ -345,21 +345,21 @@ file      proc/proc.c
 file      vm/kmalloc.c
 #file      vm/coremap.c
 
-defoption novavm
+defoption paging
 
 defoption dumbvm
 
-optfile novavm vm/novavm.c
-optfile novavm vm/coremap.c
-optfile novavm vm/ipt.c
-optfile novavm vm/segment.c
-optfile novavm vm/vm_tlb.c
-optfile novavm vm/vmstats.c
-optfile novavm vm/swapfile.c
+optfile paging vm/novavm.c
+optfile paging vm/coremap.c
+optfile paging vm/ipt.c
+optfile paging vm/segment.c
+optfile paging vm/vm_tlb.c
+optfile paging vm/vmstats.c
+optfile paging vm/swapfile.c
 
 optofffile dumbvm   vm/addrspace.c
-#optfile novavm arch/mips/vm/novavm.c
-#optofffile novavm arch/mips/vm/dumbvm.c
+#optfile paging arch/mips/vm/novavm.c
+#optofffile paging arch/mips/vm/dumbvm.c
 
 #
 # Network

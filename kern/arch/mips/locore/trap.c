@@ -40,7 +40,7 @@
 #include <mainbus.h>
 #include <syscall.h>
 
-#include "opt-novavm.h"
+#include "opt-paging.h"
 
 
 /* in exception-*.S */
@@ -89,7 +89,7 @@ kill_curthread(vaddr_t epc, unsigned code, vaddr_t vaddr)
 		break;
 		case EX_MOD:
 		{
-			#if OPT_NOVAVM
+			#if OPT_PAGING
 				kprintf("Killing the process that caused this\n");
 				sys__exit(-1);
 				return;

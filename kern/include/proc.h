@@ -40,7 +40,7 @@
 #include <limits.h>
 #include "opt-waitpid.h"
 #include "opt-file.h"
-#include "opt-novavm.h"
+#include "opt-paging.h"
 
 struct addrspace;
 struct thread;
@@ -132,8 +132,8 @@ void proc_signal_end(struct proc *proc);
 void proc_file_table_copy(struct proc *psrc, struct proc *pdest);
 #endif
 
-#if OPT_NOVAVM
-/* [OPT_NOVAVM]: get current process pid */
+#if OPT_PAGING
+/* [OPT_PAGING]: get current process pid */
 pid_t proc_getpid(void);
 #endif
 

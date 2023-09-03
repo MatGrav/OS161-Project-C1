@@ -412,7 +412,7 @@ proc.o: ../../proc/proc.c ../../include/types.h \
  opt-noasserts.h ../../include/threadlist.h includelinks/machine/thread.h \
  ../../include/setjmp.h includelinks/kern/machine/setjmp.h \
  ../../include/addrspace.h ../../include/vm.h includelinks/machine/vm.h \
- opt-dumbvm.h opt-novavm.h ../../include/vnode.h ../../include/syscall.h \
+ opt-dumbvm.h opt-paging.h ../../include/vnode.h ../../include/syscall.h \
  opt-syscalls.h opt-fork.h
 file_syscalls.o: ../../syscall/file_syscalls.c ../../include/types.h \
  ../../include/kern/types.h includelinks/kern/machine/types.h \
@@ -438,7 +438,7 @@ loadelf.o: ../../syscall/loadelf.c ../../include/types.h \
  ../../include/thread.h ../../include/array.h ../../include/threadlist.h \
  includelinks/machine/thread.h ../../include/setjmp.h \
  includelinks/kern/machine/setjmp.h ../../include/addrspace.h \
- ../../include/vm.h includelinks/machine/vm.h opt-dumbvm.h opt-novavm.h \
+ ../../include/vm.h includelinks/machine/vm.h opt-dumbvm.h opt-paging.h \
  ../../include/vnode.h ../../include/elf.h includelinks/machine/elf.h
 proc_syscalls.o: ../../syscall/proc_syscalls.c ../../include/types.h \
  ../../include/kern/types.h includelinks/kern/machine/types.h \
@@ -453,7 +453,7 @@ proc_syscalls.o: ../../syscall/proc_syscalls.c ../../include/types.h \
  ../../include/array.h ../../include/threadlist.h \
  includelinks/machine/thread.h ../../include/setjmp.h \
  includelinks/kern/machine/setjmp.h ../../include/addrspace.h \
- ../../include/vm.h includelinks/machine/vm.h opt-dumbvm.h opt-novavm.h \
+ ../../include/vm.h includelinks/machine/vm.h opt-dumbvm.h opt-paging.h \
  includelinks/mips/trapframe.h ../../include/current.h \
  includelinks/machine/current.h ../../include/synch.h opt-synch.h
 runprogram.o: ../../syscall/runprogram.c ../../include/types.h \
@@ -467,7 +467,7 @@ runprogram.o: ../../syscall/runprogram.c ../../include/types.h \
  ../../include/thread.h ../../include/array.h ../../include/threadlist.h \
  includelinks/machine/thread.h ../../include/setjmp.h \
  includelinks/kern/machine/setjmp.h ../../include/addrspace.h \
- ../../include/vm.h includelinks/machine/vm.h opt-dumbvm.h opt-novavm.h \
+ ../../include/vm.h includelinks/machine/vm.h opt-dumbvm.h opt-paging.h \
  ../../include/vfs.h ../../include/syscall.h opt-syscalls.h opt-fork.h \
  ../../include/test.h
 time_syscalls.o: ../../syscall/time_syscalls.c ../../include/types.h \
@@ -604,7 +604,7 @@ thread.o: ../../thread/thread.c ../../include/types.h \
  ../../include/proc.h ../../include/limits.h ../../include/kern/limits.h \
  opt-waitpid.h opt-file.h ../../include/current.h \
  includelinks/machine/current.h ../../include/synch.h opt-synch.h \
- ../../include/addrspace.h ../../include/vm.h opt-dumbvm.h opt-novavm.h \
+ ../../include/addrspace.h ../../include/vm.h opt-dumbvm.h opt-paging.h \
  ../../include/mainbus.h ../../include/vnode.h
 threadlist.o: ../../thread/threadlist.c ../../include/types.h \
  ../../include/kern/types.h includelinks/kern/machine/types.h \
@@ -699,7 +699,7 @@ trap.o: ../../arch/mips/locore/trap.c ../../include/types.h \
  ../../include/setjmp.h includelinks/kern/machine/setjmp.h \
  ../../include/current.h includelinks/machine/current.h \
  ../../include/vm.h ../../include/mainbus.h ../../include/syscall.h \
- opt-syscalls.h opt-fork.h opt-file.h opt-novavm.h
+ opt-syscalls.h opt-fork.h opt-file.h opt-paging.h
 syscall.o: ../../arch/mips/syscall/syscall.c ../../include/types.h \
  ../../include/kern/types.h includelinks/kern/machine/types.h \
  includelinks/machine/types.h ../../include/kern/errno.h \
@@ -710,7 +710,7 @@ syscall.o: ../../arch/mips/syscall/syscall.c ../../include/types.h \
  opt-hangman.h includelinks/machine/spinlock.h ../../include/threadlist.h \
  includelinks/machine/thread.h ../../include/setjmp.h \
  includelinks/kern/machine/setjmp.h ../../include/addrspace.h \
- ../../include/vm.h includelinks/machine/vm.h opt-dumbvm.h opt-novavm.h \
+ ../../include/vm.h includelinks/machine/vm.h opt-dumbvm.h opt-paging.h \
  ../../include/syscall.h opt-syscalls.h opt-fork.h opt-file.h
 cpu.o: ../../arch/mips/thread/cpu.c ../../include/types.h \
  ../../include/kern/types.h includelinks/kern/machine/types.h \
@@ -757,7 +757,7 @@ dumbvm.o: ../../arch/mips/vm/dumbvm.c ../../include/types.h \
  ../../include/array.h includelinks/machine/thread.h \
  ../../include/setjmp.h includelinks/kern/machine/setjmp.h \
  includelinks/mips/tlb.h ../../include/addrspace.h ../../include/vm.h \
- opt-dumbvm.h opt-novavm.h
+ opt-dumbvm.h opt-paging.h
 ram.o: ../../arch/mips/vm/ram.c ../../include/types.h \
  ../../include/kern/types.h includelinks/kern/machine/types.h \
  includelinks/machine/types.h ../../include/lib.h ../../include/cdefs.h \

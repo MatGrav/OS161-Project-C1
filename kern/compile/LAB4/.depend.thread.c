@@ -11,5 +11,5 @@ thread.o: ../../thread/thread.c ../../include/types.h \
  ../../include/proc.h ../../include/limits.h ../../include/kern/limits.h \
  opt-waitpid.h opt-file.h ../../include/current.h \
  includelinks/machine/current.h ../../include/synch.h opt-synch.h \
- ../../include/addrspace.h ../../include/vm.h opt-dumbvm.h opt-novavm.h \
+ ../../include/addrspace.h ../../include/vm.h opt-dumbvm.h opt-paging.h \
  ../../include/mainbus.h ../../include/vnode.h
