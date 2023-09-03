@@ -99,7 +99,11 @@ _N.B. Abbiamo modificato la dimensione della RAM in os161/root/sys161.conf porta
 ## Address Space
 Ogni processo ha un proprio spazio di indirizzamento, che in OS161 può essere visto come l'unione di 3 segmenti: codice, dati e stack. Abbiamo scelto di utilizzare questa rappresentazione, utilizzando la __struct segment__ (vedi paragrafo).
 
-[ CODICE ADDRSPACE]
+```
+	struct segment* code;
+        struct segment* data;
+        struct segment* stack;
+```
 
 A supporto di tale struttura, sono state implementate diverse funzioni: `as_create()` per l'allocazione della struct (che a sua volta chiama la `segment_create()`, che alloca ogni segmento), `as_destroy()` per la deallocazione e distruzione della struct, `as_copy()` per copiarla.
 È importante da menzionare anche **`as_activate()`** la quale, facendo il **flush della TLB** (invalida ogni entry), ci permette di gestire al meglio anche i cambi di contesto.
@@ -111,7 +115,14 @@ La `load_elf()` è stata a sua volta modificata, introducendo la nuova logica de
 La scelta finale è ricaduta su una IPT, pertanto unica a livello di sistema e di dimensione pari al numero di frame (_nRamFrames_).  
 La entry generica della IPT memorizza l'identificativo del processo, l' indirizzo virtuale (allineato a pagina), stato (_ABSENT_ o _PRESENT_) e protezione.
 Si nota che, per semplicità, si è scelto di memorizzare indirizzo virtuale, stato e protezione anzichè numero di pagina virtuale, bit di stato e bits di protezione.  
-
+```
+struct ipt_entry{
+    pid_t p_pid; /* process pid */
+    vaddr_t page_number;
+    uint8_t status; /* Present or absent */
+    uint8_t protection; /* read-only, write, read-write*/
+};
+```
 [CODICE STRUCT IPT_ENRTRY]
 
 Oltre alle tipiche funzioni per la creazione e distruzione della page table e delle sue entry, 
@@ -138,10 +149,18 @@ A supporto, è stata aggiunta anche una bitmap, per segnare una specifica pagina
 
 ## Segmenti
 Come detto in precedenza, in OS161 ogni programma utente è diviso in segmenti che possono essere di codice, dati o stack. A supporto di tale logica, abbiamo implementato una nuova struttura dati, per il segmento, che è la seguente:
-
-[CODICE SEGMENTO]
-
+```
+struct segment{
+    vaddr_t vaddr; /* Virtual address of the segment */
+    size_t memsize; /* Segment size reserved for the segment in virtual memory */
+    size_t npage; /* Number of pages, useful for paging algorithm */
+    size_t filesize; /* Segment size in the ELF file */
+	/* flags vari */
+    struct vnode* file_elf; // serve per la load_segment
+    struct addrspace* as; //puntatore all'address space a cui appartiene, serve alla load_segment
+};
+```
 Le proprietà e il contenuto dei segmenti codice e dati sono scritti nel file ELF, dunque sicuramente andranno caricati in memoria, a un certo punto, quando c'è la chiamata alla `load_elf()`. Lo stack, invece, viene definito in _runprogram.c_ con la chiamata di `as_define_stack()`, nel quale c'è l'inizializzazione di ogni parametro. Ad esempio:
-l'indirizzo virtuale è `USERSTACK-(NOVAVM_STACKPAGES*PAGE_SIZE)`, mentre la dimensione della memoria pari a `NOVAVM_STACKPAGES*PAGE_SIZE`.
+l'indirizzo virtuale è `USERSTACK-(NOVAVM_STACKPAGES*PAGE_SIZE)`, mentre la dimensione del segmento stack è pari a `NOVAVM_STACKPAGES*PAGE_SIZE`.
 
 A supporto della struct segment, sono state create funzioni per la gestione tra cui quelle per la creazione e distruzione, per la copia, e anche la `segment_prepare_load` che ha lo scopo di preparare un segmento al caricamento in memoria.
