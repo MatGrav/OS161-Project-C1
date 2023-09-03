@@ -10,6 +10,7 @@
 #include <machine/vm.h>
 
 #include "ipt.h"
+#include "vmstats.h"
 
 struct spinlock free_ipt = SPINLOCK_INITIALIZER;
 struct spinlock free_queue = SPINLOCK_INITIALIZER;
@@ -74,11 +75,8 @@ static unsigned int ipt_queue_fifo_pop()
     return old;
 }
 
-static void ipt_queue_fifo_push(unsigned int el)
+static void ipt_queue_fifo_push(unsigned int i)
 {
-    KASSERT(el != 0);
-    // TO DO: i defined where?
-    unsigned int i = el;
     spinlock_acquire(&free_queue);
     queue_fifo[queue_rear] = i; /* we write the index of page table */
     queue_rear = (queue_rear + 1) % IPT_SIZE; /* update of rear */
@@ -270,11 +268,14 @@ paddr_t ipt_translate(pid_t pid, vaddr_t v)
     if (found)
     {
         p = PAGE_SIZE * i;
+        vmstats_increase(TLB_RELOADS);
     }
     else
     {
         p = ipt_fault(NOT_MAPPED);
         ipt_map(pid, v, p);
+        vmstats_increase(PAGE_FAULTS_ZEROED);
+        if(v < USERSTACK-(NOVAVM_STACKPAGES*PAGE_SIZE)){ vmstats_increase_2(PAGE_FAULTS_ELF,PAGE_FAULTS_DISK);}
     }
 
     return p;
@@ -288,7 +289,7 @@ void ipt_swap_push(struct ipt_entry *ipt_e)
 
     paddr_t p = ipt_translate(ipt_e->p_pid, ipt_e->page_number);
 
-    swap_in(p);
+    swap_out(p);    
 }
 
 /* This just invalidates the ipt_entry in SWAPFILE. */
@@ -301,5 +302,5 @@ void ipt_swap_pop(struct ipt_entry *ipt_e)
 
     paddr_t p = ipt_translate(ipt_e->p_pid, ipt_e->page_number);
     
-    swap_out(p);
+    swap_in(p);
 }

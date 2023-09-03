@@ -53,7 +53,7 @@ void swap_clean_up(){
 }
 
 
-void swap_in(paddr_t paddr){
+void swap_out(paddr_t paddr){
     KASSERT(swapfile!=NULL);
 
     struct iovec iov;
@@ -79,14 +79,14 @@ void swap_in(paddr_t paddr){
         bitmap[index]=SF_PRESENT;
     }
     spinlock_release(&swap_free);
-    vmstats_increase(PAGE_FAULTS_SWAPFILE);
+    vmstats_increase(SWAPFILE_WRITES);
     
 }
 
 /* Useful because it includes a "swap_search" */
 /* Every page is written with a specific offset in SWAPFILE */
 /* So, we can quickly know if a page is written (or not) in SWAPFILE */
-void swap_out(paddr_t paddr){
+void swap_in(paddr_t paddr){
     KASSERT(swapfile!=NULL);
 
     struct iovec iov;
@@ -116,7 +116,7 @@ void swap_out(paddr_t paddr){
         return;
     }
     spinlock_release(&swap_free);
-    vmstats_increase(SWAPFILE_WRITES);
+    vmstats_increase(PAGE_FAULTS_SWAPFILE);
 
 
     return;

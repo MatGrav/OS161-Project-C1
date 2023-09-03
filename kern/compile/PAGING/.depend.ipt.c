@@ -6,4 +6,5 @@ ipt.o: ../../vm/ipt.c ../../include/types.h ../../include/kern/types.h \
  ../../include/spinlock.h ../../include/hangman.h opt-hangman.h \
  includelinks/machine/spinlock.h ../../include/swapfile.h \
  ../../include/proc.h ../../include/limits.h ../../include/kern/limits.h \
- opt-waitpid.h opt-file.h ../../include/novavm.h ../../include/ipt.h
+ opt-waitpid.h opt-file.h ../../include/novavm.h ../../include/ipt.h \
+ ../../include/vmstats.h

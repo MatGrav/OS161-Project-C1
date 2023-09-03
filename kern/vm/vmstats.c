@@ -41,7 +41,7 @@ void vmstats_print(){
 
     kprintf("\n\nPrinting vm stats:\n");
     if(curstats[TLB_FAULTS] != (curstats[TLB_FAULTS_FREE] + curstats[TLB_FAULTS_REPLACE])){
-        kprintf("[WARNING: TLB_FAULTS is not equal to TLB_FAULT_FREE + TLB_FAULTS_REPLACE]\n");
+        kprintf(">>>[WARNING: TLB_FAULTS is not equal to TLB_FAULT_FREE + TLB_FAULTS_REPLACE]\n\n");
     };
     kprintf("TLB Faults: %u\n",curstats[TLB_FAULTS]);
     kprintf("TLB Faults with Free: %u\n",curstats[TLB_FAULTS_FREE]);
@@ -51,7 +51,7 @@ void vmstats_print(){
     kprintf("TLB Reloads: %u\n",curstats[TLB_RELOADS]);
 
     if(curstats[TLB_FAULTS] != (curstats[TLB_RELOADS] + curstats[PAGE_FAULTS_DISK] + curstats[PAGE_FAULTS_ZEROED])){
-        kprintf("\n[WARNING: TLB Fault is not equal to TLB Reloads + PageFaults (Disk) + PageFaults(Zeroed)]\n");
+        kprintf("\n>>>[WARNING: TLB Fault is not equal to TLB Reloads + PageFaults (Disk) + PageFaults(Zeroed)]\n\n");
     };
 
     kprintf("Page Faults (Zeroed): %u\n",curstats[PAGE_FAULTS_ZEROED]);
@@ -61,7 +61,7 @@ void vmstats_print(){
     kprintf("Swapfile Writes: %u\n",curstats[SWAPFILE_WRITES]);
 
     if(curstats[TLB_FAULTS] != (curstats[PAGE_FAULTS_DISK] + curstats[PAGE_FAULTS_SWAPFILE] + curstats[PAGE_FAULTS_ELF])){
-        kprintf("\n[WARNING: Page Faults (Disk) is not equal to Page Faults from Swapfile + Page Faults from ELF]\n");
+        kprintf("\n>>>[WARNING: Page Faults (Disk) is not equal to Page Faults from Swapfile + Page Faults from ELF]\n\n");
     };
     kprintf("\n\n");
 }

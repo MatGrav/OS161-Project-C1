@@ -9,8 +9,8 @@
 
 void swap_init(void);
 void swap_clean_up(void);
-void swap_in(paddr_t);
-void swap_out(paddr_t);
+void swap_in(paddr_t); /* Read from swapfile */
+void swap_out(paddr_t); /* Writes to swapfile */
 
 
 #endif
