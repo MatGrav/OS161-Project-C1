@@ -97,12 +97,15 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	KASSERT((as->data->vaddr & PAGE_FRAME) == as->data->vaddr);
 	KASSERT((as->stack->vaddr & PAGE_FRAME) == as->stack->vaddr);
 
+	vmstats_increase(TLB_FAULTS);
+
 	pid_t pid = proc_getpid();
 	paddr = ipt_translate(pid, faultaddress);
 
 	if(paddr == 0){
 		return EFAULT;
 	}
+	
 
 	/* make sure it's page-aligned */
 	KASSERT((paddr & PAGE_FRAME) == paddr);
@@ -119,7 +122,7 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 		elo = paddr | TLBLO_DIRTY | TLBLO_VALID;
 		DEBUG(DB_VM, "novavm: 0x%x -> 0x%x\n", faultaddress, paddr);
 		tlb_write(ehi, elo, i);
-		vmstats_increase_2(TLB_FAULTS,TLB_FAULTS_FREE);
+		vmstats_increase(TLB_FAULTS_FREE);
 		splx(spl);
 		return 0;
 	}
@@ -129,7 +132,7 @@ vm_fault(int faulttype, vaddr_t faultaddress)
 	ehi = faultaddress;
 	elo = paddr | TLBLO_DIRTY | TLBLO_VALID;
 	tlb_write(ehi,elo,tlb_get_rr_victim());
-	vmstats_increase_2(TLB_FAULTS,TLB_FAULTS_REPLACE);
+	vmstats_increase(TLB_FAULTS_REPLACE);
 	splx(spl);
 	return 0;
 }
