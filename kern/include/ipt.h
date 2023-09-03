@@ -8,6 +8,8 @@
 
 #define IPT_SIZE get_nRamFrames()
 
+#define BUFF_SIZE 16
+
 /* Debug printing of page table dimension */
 #define PRINT_IPT_DIM 1
 
@@ -21,8 +23,8 @@
 struct ipt_entry{
     pid_t p_pid; /* process pid */
     vaddr_t page_number;
-    uint32_t status; /* Present or absent */
-    uint32_t protection; /* read-only, write, read-write*/
+    uint8_t status; /* Present or absent */
+    uint8_t protection; /* read-only, write, read-write*/
 };
 
 /* Values of status */

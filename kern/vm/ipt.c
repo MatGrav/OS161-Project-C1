@@ -115,13 +115,26 @@ void ipt_destroy()
     kfree(ipt);
 }
 
-static unsigned int ipt_hash(vaddr_t v)
-{   
-    pid_t pid = proc_getpid();
-    unsigned int h = (pid+v) % IPT_SIZE;
+/* IPT Most Recently Added */
 
-    return h;
+static unsigned int* ipt_mra()
+{   
+    unsigned int i;
+    unsigned int* buf = kmalloc(sizeof(unsigned int)*BUFF_SIZE);
+
+    spinlock_acquire(&free_queue);
+    for (i=0; i<BUFF_SIZE; i++){
+        if(queue_fifo[queue_rear - i]!=0){
+            buf[i] = queue_fifo[queue_rear - i];
+        } else {
+            buf[i] = 0;
+        }
+    }
+    spinlock_release(&free_queue);
+
+    return buf;
 }
+
 
 
 /* Returns index where virtual address is, found is to be checked after calling */
@@ -130,28 +143,29 @@ static unsigned int ipt_search(pid_t pid, vaddr_t v, bool *found)
     KASSERT(pid != 0);
     //KASSERT(v != 0);
 
-    unsigned int index = 0;
+    unsigned int* buff = 0;
     unsigned int i = 0;
     *found = false;
     /* Page number, no displacement */
     v &= PAGE_FRAME;
 
-    spinlock_acquire(&free_ipt);
-    /* index to access to inverted page table */
-    
-    index = ipt_hash(v);
+    /* vector of indexes to access to inverted page table */
+    buff = ipt_mra();
 
-    for (i = index; i < IPT_SIZE; i++)
+    spinlock_acquire(&free_ipt);
+    for (i = 0; i < BUFF_SIZE && buff[i]!=0; i++)
     {
-        if (ipt[i].p_pid == pid && ipt[i].page_number == v)
+        if (ipt[buff[i]].p_pid == pid && ipt[buff[i]].page_number == v)
         {
             *found = true;
             break;
         }
     }
-    if (!found)
+    
+    if (!(*found))
     {
-        for (i = 0; i < index; i++)
+    
+        for (i = 0; i < IPT_SIZE; i++)
         {
             if (ipt[i].p_pid == pid && ipt[i].page_number == v)
             {
@@ -161,10 +175,11 @@ static unsigned int ipt_search(pid_t pid, vaddr_t v, bool *found)
         }
     }
     
-    index = i;
-    spinlock_release(&free_ipt);
 
-    return index;
+    spinlock_release(&free_ipt);
+    kfree(buff);
+    
+    return i;
 }
 
 void ipt_map(pid_t pid, vaddr_t v, paddr_t p)
