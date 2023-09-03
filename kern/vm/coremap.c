@@ -185,8 +185,10 @@ static paddr_t getppages(unsigned long npages){
 }
 
 static void add_np_entry(struct coremap_entry* cm){
-  cmap->np[cmap->np_tail]->associated_addr = cm->associated_addr;
   cmap->np[cmap->np_tail]->num_assaddr = cm->num_assaddr;
+  for(unsigned int i=0;i<(cm->num_assaddr);i++){
+    (cmap->np[cmap->np_tail]->associated_addr)[i] = cm->associated_addr[i];
+  }
   cmap->np[cmap->np_tail]->frame_addr = cm->frame_addr;
   cmap->np[cmap->np_tail]->status = cm->status;
   cmap->np[cmap->np_tail]->consec_pages = cm->consec_pages;
@@ -207,7 +209,7 @@ static int freeppages(paddr_t addr, unsigned long npages){
     cmap->entry[i].status = FREE;
     cmap->entry[i].consec_pages = 0;
     kprintf("Debug: CLeaning a page\n"); 
-    add_np_entry(&cmap->entry[i]);   
+    add_np_entry(&(cmap->entry[i]));   
   }
   spinlock_release(&coremap_lock);
 

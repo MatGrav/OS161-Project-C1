@@ -77,9 +77,9 @@ void swap_out(paddr_t paddr){
     if(bitmap[index]==SF_ABSENT){
         VOP_WRITE(swapfile, &ku);
         bitmap[index]=SF_PRESENT;
+        vmstats_increase(SWAPFILE_WRITES);
     }
     spinlock_release(&swap_free);
-    vmstats_increase(SWAPFILE_WRITES);
     
 }
 
@@ -111,12 +111,13 @@ void swap_in(paddr_t paddr){
     if(bitmap[index]==SF_PRESENT) {
         VOP_READ(swapfile, &ku);
         bitmap[index]=SF_ABSENT;
+        vmstats_increase(PAGE_FAULTS_SWAPFILE);
     } else {
         spinlock_release(&swap_free);
         return;
     }
     spinlock_release(&swap_free);
-    vmstats_increase(PAGE_FAULTS_SWAPFILE);
+    
 
 
     return;
