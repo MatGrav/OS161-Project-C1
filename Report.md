@@ -23,16 +23,10 @@ Implementazione in OS161 di:
 Inizialmente, si è analizzato per diversi giorni il codice di DUMBVM, per capire come funzionasse nello specifico. Successivamente, sono stati elaborati uno schema logico, affinché fossero garantite le nuove specifiche per NovaVM, e un'approssimata time table.
 Solo in una seconda fase, è iniziata la scrittura del codice.
 
-Un repository su GitHub è stato utilizzato per tenere traccia di tutti i cambiamenti ed introduzioni nel codice. Ciò ha permesso ai membri del gruppo di lavorare in linea generale su computer separati e in autonomia, dividendosi equamente il lavoro, ma ciò non ha impedito una collaborazione costruttiva tra i due.
-
-D'altronde, la natura interconnessa del codice ha richiesto ai membri del gruppo di confrontarsi frequentemente sui lavori da farsi, per essere sempre aggiornati sulle funzioni implementate e come esse comunichino con altri nuovi moduli di OS161.
-[Link per stesura di file .md](https://chat.openai.com/share/b8d52ceb-4b52-4795-b3ed-1d0a377be42b)  
+Un repository su GitHub è stato utilizzato per tenere traccia di tutti i cambiamenti ed introduzioni nel codice. Ciò ha permesso ai membri del gruppo di lavorare in linea generale su computer separati e in autonomia, dividendosi equamente il lavoro. TUttavia, la natura interconnessa del codice ha richiesto ai membri del gruppo di confrontarsi frequentemente sui lavori da farsi, per essere sempre aggiornati sulle funzioni implementate, sulle problematiche comuni e su come esse comunichino con altri nuovi moduli di OS161.
 
 ## COREMAP
 Il primo modulo implementato dal gruppo è relativo alla coremap, ovvero una struttura dati che consente il tracciamento dei frame liberi (e occupati) in memoria.  
-
-Questa scelta ci consente di fornire uno "strato intermedio" tra l'hardware e **continuare**  
-
 La coremap è vista come una struttura dati che ha all'interno: un array di struct di entry generica, la size della coremap, un vettore di pagine libere e la sua size.  
 
 L'entry generica della coremap è composta così: l'indirizzo fisico della pagina, un vettore di puntatori (**) di struct addrspace (attenzione: forse va modificata la struttura?),
@@ -40,16 +34,9 @@ il numero di addrspace (inteso come: in quanti address space è mappata la pagin
 
 Dunque, bisogna cambiare le funzioni che allocano pagine di memoria, in quanto bisognerà far riferimento a questa struttura coremap che, a sua volta, marcherà i frame liberi o occupati e popolerà i suoi campi. Le funzioni da modificare: getppages e free_kpages che, in teoria, non usano più la ram_stealmem perché quest'ultima prende a prescindere memoria fisica senza controllare effettivamente se lo spazio è libero o occupato (che ruolo ha quindi la ram_stealmem? -> vedi avanti)  
 
-
-In _coremap.c_ ci sono funzioni per l'allocazione di pagine sia kernel che utente.  
-Infatti, in OS161, sono utilizzate funzioni quali _alloc_kpages()_ e _as_prepare_load()_ (presenti in dumbvm e scritte in coremap.c) che sfruttano, a loro volta, _getppages()_  
-Nel laboratorio 2 del corso di PdS, sono state fornite anche funzioni di liberazione di pagine/frames.  
-
+In _coremap.c_ ci sono funzioni per l'allocazione di pagine sia kernel che utente. Infatti, in OS161, sono utilizzate funzioni quali _alloc_kpages()_ e _as_prepare_load()_ (presenti in dumbvm e scritte in coremap.c) che sfruttano, a loro volta, _getppages()_. In maniera analoga, sono state fornite funzioni per la deallocazione di pagine.  
 Prima che la coremap venga attivata, è necessario poter allocare per conto kernel nonostante l'assenza della stessa. A tal scopo, sulla linea di dumbvm, è utilizzata la _ram_stealmem()_.  
-Da qui in poi, bisogna utilizzare le funzioni da definire in coremap.c per una giusta allocazione (free/allocated).  
-
-**Nel nostro caso, non possiamo fare così. Dobbiamo, qualora non ci fosse più spazio disponibile (ergo, non ci sono sufficienti frame marcati come liberi), chiamare  un
-algoritmo di sostituzione delle pagine, secondo una politica di sostituzione da definire in seguito (second chance, ecc).**  
+Verificata la presenza e l'attivazione della coremap, si procede utilizzando le funzioni fornite in coremap.c per una giusta allocazione (free/allocated).  
 
 ## NovaVM: Nuovo gestore memoria virtuale e TLB
 Come detto in precedenza, è stato aggiunto un nuovo gestore di memoria virtuale, NovaVM, che sostituisce DUMBVM.
@@ -59,22 +46,20 @@ Nel nostro novavm.c la funzione principale è quest'ultima, in quanto si è scel
 ```
 int vm_fault(int faulttype, vaddr_t faultaddress){
   /* ... */
-  switch (faulttype) {
+  	switch (faulttype) {
 	    case VM_FAULT_READONLY:
 			return EACCES;
   /* ... */
-  pid_t pid = proc_getpid();
+  	pid_t pid = proc_getpid();
 	paddr = ipt_translate(pid, faultaddress);
   /* ... */
-  /* At this point dumbvm, running out of entries, couldn't handle pf
-	returning EFAULT*/
+  /* At this point dumbvm, running out of entries, couldn't handle pf, therefore returning EFAULT*/
 	ehi = faultaddress;
 	elo = paddr | TLBLO_DIRTY | TLBLO_VALID;
 	tlb_write(ehi,elo,tlb_get_rr_victim());
 	vmstats_increase_2(TLB_FAULTS,TLB_FAULTS_REPLACE);
 	splx(spl);
-	return 0;
-}
+	return 0;}
 ```
 Nei frammenti di codice riportato si evidenziano le soluzioni di due requisiti:
 
@@ -122,9 +107,7 @@ struct ipt_entry{
     uint8_t status; /* Present or absent */
     uint8_t protection; /* read-only, write, read-write*/
 };
-```
-[CODICE STRUCT IPT_ENRTRY]
-
+```  
 Oltre alle tipiche funzioni per la creazione e distruzione della page table e delle sue entry, 
 ci sono nuove funzioni per la mappatura degli indirizzi, per la traduzione logico-fisica e per la gestione dei page fault.
 Nello specifico:
